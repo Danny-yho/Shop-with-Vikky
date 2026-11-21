@@ -66,7 +66,11 @@ html[data-theme="dark"] .shop-banner-card,
 html[data-theme="dark"] .trust-strip > div,
 html[data-theme="dark"] .product-card { background:rgba(62,37,85,.92); border-color:rgba(226,210,239,.2); color:var(--purple-950); }
 html[data-theme="dark"] .shop-banner-card { background:rgba(62,37,85,.94); }
+html[data-theme="dark"] .btn-glossy { color:#FFF!important; background:linear-gradient(135deg,#68458B,#4B2D6A); }
 html[data-theme="dark"] .btn-outline-brand { color:var(--purple-950)!important; background:#4A3063; border-color:#B99AD4; }
+html[data-theme="dark"] .cart-count,
+html[data-theme="dark"] .badge-featured,
+html[data-theme="dark"] .back-to-top { color:#F8F1FF; background:#5A3D78; }
 html[data-theme="dark"] .form-control,
 html[data-theme="dark"] .form-select,
 html[data-theme="dark"] .filters input,
@@ -82,6 +86,19 @@ html[data-theme="dark"] .alert-light { color:#F8F1FF; background:#3D2854; border
 html[data-theme="dark"] .wishlist-btn { color:#F8F1FF; background:#4A3063; }
 html[data-theme="dark"] .text-muted { color:#D2C0E2!important; }
 html[data-theme="dark"] .admin-shell { background:rgba(39,20,60,.78); }
+html[data-theme="dark"] .admin-sidebar { color:#F8F1FF; background:#351E4E; }
+html[data-theme="dark"] .admin-sidebar a { color:#E9DBF8; }
+html[data-theme="dark"] .admin-sidebar a:hover { color:#FFF; background:#5A3D78; }
+html[data-theme="dark"] .table {
+  --bs-table-color:#F8F1FF;
+  --bs-table-border-color:#72578D;
+  --bs-table-hover-color:#FFF;
+  --bs-table-hover-bg:#4A3063;
+}
+html[data-theme="dark"] .footer { color:#F8F1FF; background:#351E4E; }
+html[data-theme="dark"] .footer a { color:#E9DBF8; }
+html[data-theme="dark"] .footer-wave path { fill:#351E4E; }
+html[data-theme="dark"] .toast-brand { color:#FFF; background:#351E4E; }
 html[data-theme="dark"] .preloader { background:#2B1A3D; }
 html[data-theme="dark"] .preloader img { filter:brightness(.85); }
 .hero { min-height:620px; position:relative; display:grid; place-items:center; text-align:center; overflow:hidden; padding:3rem 1rem; }
