@@ -1,5 +1,14 @@
 const API = '/api';
 const WHATSAPP = 'https://wa.me/2347030660694';
+const themeKey = 'swv-theme';
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+    button.setAttribute('aria-pressed', String(theme === 'dark'));
+    button.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    button.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  });
+}
 const sampleProducts = [
   {id:1,name:'Amara Purple Maxi Dress',slug:'amara-purple-maxi-dress',price:38500,category:'Dresses',images:['https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=80'],sizes:['XS','S','M','L','XL','XXL'],colors:['Purple'],stock:12,bestSeller:true},
   {id:2,name:'Lagos Glam Two-Piece',slug:'lagos-glam-two-piece',price:42000,category:'Two-Piece Sets',images:['https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=900&q=80'],sizes:['S','M','L','XL'],colors:['Lavender','Black'],stock:8,featured:1,newArrival:true},
@@ -28,8 +37,8 @@ function headerFooter(){
   document.querySelectorAll('[data-header]').forEach(el=>el.innerHTML=`
     <div class="announcement" data-announcement>“Style you love, delivered quickly and reliably.”</div>
     <nav class="navbar navbar-expand-lg sticky-top" aria-label="Main navigation"><div class="container">
-      <a class="navbar-brand" href="/" aria-label="Go to the Shop with Vikky homepage" title="Click the logo to return to the homepage"><img src="/images/logo-full.png" alt="Shop with Vikky"></a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <div class="navbar-brand-wrap"><a class="navbar-brand" href="/" aria-label="Go to the Shop with Vikky homepage" title="Click the logo to return to the homepage"><img src="/images/logo-full.png" alt="Shop with Vikky"></a><span class="navbar-brand-hint">Click the logo to return to the homepage</span></div>
+      <div class="navbar-tools"><button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode"><svg class="theme-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.4A8.4 8.4 0 0 1 8.6 3.8 8.7 8.7 0 1 0 20.2 15.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="theme-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="visually-hidden">Toggle dark mode</span></button><button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button></div>
       <div class="collapse navbar-collapse" id="mainNav"><ul class="navbar-nav ms-auto align-items-lg-center">
       <li class="nav-item"><a class="nav-link" href="/shop.html">Shop</a></li><li class="nav-item"><a class="nav-link" href="/about.html">About</a></li><li class="nav-item"><a class="nav-link" href="/contact.html">Contact</a></li>
       <li class="nav-item"><a class="nav-link" href="/faq.html">FAQ</a></li><li class="nav-item"><a class="nav-link" href="/cart.html">Cart <span class="cart-count">0</span></a></li>
@@ -41,7 +50,7 @@ function headerFooter(){
   });
   document.querySelectorAll('[data-footer]').forEach(el=>el.innerHTML=`
     <footer class="footer"><svg class="footer-wave" viewBox="0 0 1200 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 52C220 10 370 70 590 28S950 8 1200 48V60H0z" fill="#3B0B73"/></svg>
-    <div class="container-main"><div class="row g-4"><div class="col-md-5"><img src="/images/logo-full.png" alt="" style="height:90px"><p>Luxury fashion, shoes, bags, accessories and unique everyday finds.</p><p>07030660694 · 09043786316</p></div>
+    <div class="container-main"><div class="row g-4"><div class="col-md-5"><img src="/images/logo-full.png" alt="" style="height:90px"><p>Luxury fashion, shoes, bags, accessories and unique everyday finds.</p><p><strong>Visit us:</strong> <a href="https://maps.google.com/?q=Abeokuta+Osiele" target="_blank" rel="noopener">Abeokuta Osiele</a></p><p>07030660694 · 09043786316</p></div>
     <div class="col-md-3"><h5>Explore</h5><a href="/shop.html" class="d-block mb-2">Shop</a><a href="/about.html" class="d-block mb-2">Our story</a><a href="/track.html" class="d-block mb-2">Track order</a></div>
     <div class="col-md-4"><h5>Stay in touch</h5><a class="footer-action footer-whatsapp" href="${WHATSAPP}" target="_blank" rel="noopener">Chat on WhatsApp <span>→</span></a><a class="footer-action footer-tiktok" href="https://www.tiktok.com/@shopwithvikky12" target="_blank" rel="noopener">Follow on TikTok <span>♪</span></a></div></div>
     <hr style="border-color:#B99AF0"><small>© ${new Date().getFullYear()} Shop with Vikky</small></div></footer>
@@ -56,6 +65,14 @@ function productCard(p){
 }
 async function loadProducts(){try{const d=await api('/products?limit=24'); return d.data||d.products||[]}catch{return sampleProducts}}
 function bindGlobal(){
+  document.querySelectorAll('[data-theme-toggle]').forEach((button) => button.addEventListener('click', () => {
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(themeKey, theme);
+    setTheme(theme);
+  }));
+  window.addEventListener('storage', (event) => {
+    if (event.key === themeKey) setTheme(event.newValue === 'dark' ? 'dark' : 'light');
+  });
   updateCartCount();
   document.addEventListener('error',event=>{
     const image=event.target;
@@ -88,4 +105,4 @@ function bindGlobal(){
   setTimeout(()=>document.querySelector('.preloader')?.classList.add('hidden'),450);
   api('/settings').then(d=>{const s=d.settings||d; if(s?.announcement)document.querySelectorAll('[data-announcement]').forEach(e=>e.textContent=s.announcement)}).catch(()=>{});
 }
-document.addEventListener('DOMContentLoaded',()=>{headerFooter();bindGlobal()});
+document.addEventListener('DOMContentLoaded',()=>{headerFooter();setTheme(localStorage.getItem(themeKey)==='dark'?'dark':'light');bindGlobal()});
