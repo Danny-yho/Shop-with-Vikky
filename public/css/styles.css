@@ -180,6 +180,10 @@ html[data-theme="dark"] .preloader img { filter:brightness(.85); }
 .brand-wordmark .shop { font-size:1.7rem; -webkit-text-stroke:1px white; color:var(--purple-900); } .brand-wordmark .with { font-family:'Kaushan Script'; font-size:.85rem; text-transform:none; }
 .empty-icon { width:180px; max-width:70%; margin:auto; display:block; }
 @media(max-width:992px){ .product-grid { grid-template-columns:repeat(3,1fr); } .category-grid { grid-template-columns:repeat(3,1fr); } }
+@media(max-width:991.98px){
+  .navbar-nav { align-items:center; }
+  .navbar-nav .nav-item { text-align:center; }
+}
 @media(max-width:768px){
   body,body.marble,.marble-page { background-attachment:scroll; }
   .hero { min-height:510px; } .corner-ribbon { width:130px; height:130px; } .category-grid { grid-template-columns:repeat(2,1fr); }
