@@ -43,7 +43,7 @@ function headerFooter(){
       <li class="nav-item"><a class="nav-link" href="/shop.html">Shop</a></li><li class="nav-item"><a class="nav-link" href="/about.html">About</a></li><li class="nav-item"><a class="nav-link" href="/contact.html">Contact</a></li>
       <li class="nav-item"><a class="nav-link" href="/faq.html">FAQ</a></li><li class="nav-item"><a class="nav-link" href="/cart.html">Cart <span class="cart-count">0</span></a></li>
       <li class="nav-item ms-lg-2"><a class="nav-social nav-social-whatsapp" href="${WHATSAPP}" target="_blank" rel="noopener" aria-label="Chat with Shop with Vikky on WhatsApp">WhatsApp <span aria-hidden="true">→</span></a></li>
-      <li class="nav-item ms-lg-1 mt-2 mt-lg-0"><a class="nav-social nav-social-tiktok" href="https://www.tiktok.com/@shopwithvikky12" target="_blank" rel="noopener" aria-label="Follow Shop with Vikky on TikTok">TikTok <span aria-hidden="true">♪</span></a></li></ul></div>
+      <li class="nav-item ms-lg-1"><a class="nav-social nav-social-tiktok" href="https://www.tiktok.com/@shopwithvikky12" target="_blank" rel="noopener" aria-label="Follow Shop with Vikky on TikTok">TikTok <span aria-hidden="true">♪</span></a></li></ul></div>
     </div></nav>`);
   document.querySelectorAll('[data-header] .nav-link').forEach(link=>{
     if(link.pathname===location.pathname) link.setAttribute('aria-current','page');
