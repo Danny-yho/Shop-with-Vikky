@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     .forEach(control => control.addEventListener(control.tagName === 'SELECT' ? 'change' : 'input', applyFilters));
   document.getElementById('clearFilters').addEventListener('click', () => {
     Object.values(controls).forEach(control => { control.value = ''; });
-    controls.sort.value = 'newest';
+    controls.sort.value = 'featured';
     history.replaceState(null, '', location.pathname);
     applyFilters();
   });

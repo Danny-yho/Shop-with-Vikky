@@ -74,4 +74,37 @@ test('public catalog, order pricing, CSRF, and admin authentication', async () =
 
   const adminProducts = await agent.get('/api/admin/products');
   assert.equal(adminProducts.status, 200);
+
+  const managedProduct = {
+    categoryId,
+    name: 'Admin Managed Dress',
+    slug: 'admin-managed-dress',
+    description: 'A dress managed from the admin panel.',
+    price: 24000,
+    compareAtPrice: 28000,
+    imageUrl: '/images/admin-managed-dress.jpg',
+    sizes: ['S', 'M'],
+    colors: ['Violet'],
+    stock: 6,
+    active: true,
+    featured: true,
+    newArrival: true,
+    bestSeller: false
+  };
+  const created = await agent.post('/api/admin/products').set('X-CSRF-Token', token).send(managedProduct);
+  assert.equal(created.status, 201);
+  const productId = created.body.product.id;
+  const publicCatalog = await request(app).get('/api/products?search=Admin%20Managed%20Dress');
+  assert.equal(publicCatalog.body.pagination.total, 1);
+  assert.equal(publicCatalog.body.products[0].newArrival, true);
+
+  const hidden = await agent.put(`/api/admin/products/${productId}`)
+    .set('X-CSRF-Token', token)
+    .send({ ...managedProduct, active: false, newArrival: false, bestSeller: true });
+  assert.equal(hidden.status, 200);
+  const hiddenCatalog = await request(app).get('/api/products?search=Admin%20Managed%20Dress');
+  assert.equal(hiddenCatalog.body.pagination.total, 0);
+
+  const deleted = await agent.delete(`/api/admin/products/${productId}`).set('X-CSRF-Token', token);
+  assert.equal(deleted.status, 204);
 });

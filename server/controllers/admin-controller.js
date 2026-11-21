@@ -26,7 +26,11 @@ function createProduct(req, res) {
     .run({
       ...req.body,
       sizes: JSON.stringify(req.body.sizes),
-      colors: JSON.stringify(req.body.colors)
+      colors: JSON.stringify(req.body.colors),
+      active: Number(req.body.active),
+      featured: Number(req.body.featured),
+      newArrival: Number(req.body.newArrival),
+      bestSeller: Number(req.body.bestSeller)
     });
   res.status(201).json({ product: db.prepare('SELECT * FROM products WHERE id=?').get(result.lastInsertRowid) });
 }
@@ -41,10 +45,10 @@ function updateProduct(req, res) {
     imageUrl: req.body.imageUrl === undefined ? existing.image_url : req.body.imageUrl,
     sizes: JSON.stringify(req.body.sizes === undefined ? JSON.parse(existing.sizes || '[]') : req.body.sizes),
     colors: JSON.stringify(req.body.colors === undefined ? JSON.parse(existing.colors || '[]') : req.body.colors),
-    active: req.body.active === undefined ? Boolean(existing.active) : req.body.active,
-    featured: req.body.featured === undefined ? Boolean(existing.featured) : req.body.featured,
-    newArrival: req.body.newArrival === undefined ? Boolean(existing.new_arrival) : req.body.newArrival,
-    bestSeller: req.body.bestSeller === undefined ? Boolean(existing.best_seller) : req.body.bestSeller,
+    active: Number(req.body.active === undefined ? Boolean(existing.active) : req.body.active),
+    featured: Number(req.body.featured === undefined ? Boolean(existing.featured) : req.body.featured),
+    newArrival: Number(req.body.newArrival === undefined ? Boolean(existing.new_arrival) : req.body.newArrival),
+    bestSeller: Number(req.body.bestSeller === undefined ? Boolean(existing.best_seller) : req.body.bestSeller),
     id: existing.id
   };
   db.prepare(`UPDATE products SET category_id=@categoryId, name=@name, slug=@slug, description=@description,

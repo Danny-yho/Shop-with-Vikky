@@ -32,5 +32,6 @@ Run `npm start` for production. `npm run seed` creates the initial catalog and a
 - Customer pages are served from `public/`, including the home, shop, product, cart, checkout, success, tracking, about, contact, FAQ and 404 pages.
 - The complete customer application is available at `http://localhost:3000`.
 - The protected dashboard is available at `http://localhost:3000/admin/`.
+- In the admin dashboard, Products supports adding, editing, hiding/reactivating, and permanently deleting products; image uploads, pricing, stock, category assignment, and homepage placement flags are available there. Hiding a product is safer than deleting it when you want to retain its history.
 - Set Paystack public and secret keys in `.env`. Never expose the secret key in browser code.
 - Replace `public/images/logo-full.png` for the full logo, `public/images/logo-transparent.png` for transparent navigation artwork, and `public/images/logo-icon.svg` for the silhouette/favicon.
