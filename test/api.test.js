@@ -107,4 +107,13 @@ test('public catalog, order pricing, CSRF, and admin authentication', async () =
 
   const deleted = await agent.delete(`/api/admin/products/${productId}`).set('X-CSRF-Token', token);
   assert.equal(deleted.status, 204);
+
+  const rateLimitedRequests = await Promise.all(
+    Array.from({ length: 305 }, () => request(app).get('/api/products?limit=1'))
+  );
+  assert.ok(rateLimitedRequests.some(response => response.status === 429));
+  assert.equal(rateLimitedRequests.find(response => response.status === 429).body.error,
+    'Too many API requests. Please try again shortly.');
+  const staticAsset = await request(app).get('/js/app.js');
+  assert.equal(staticAsset.status, 200);
 });

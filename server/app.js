@@ -32,7 +32,13 @@ app.use(helmet({
 }));
 app.use(compression());
 app.use(cors({ origin: config.clientOrigin, credentials: true }));
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: true, legacyHeaders: false }));
+app.use('/api', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many API requests. Please try again shortly.' }
+}));
 app.use(express.json({
   limit: '1mb',
   verify: (req, res, buffer) => { req.rawBody = Buffer.from(buffer); }
