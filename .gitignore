@@ -2,8 +2,14 @@ node_modules/
 .env
 data/*.sqlite
 data/*.sqlite-*
+data/*.db
+*.sqlite
+*.sqlite3
+*.db
 uploads/*
 !uploads/.gitkeep
+public/uploads/*
+!public/uploads/.gitkeep
 coverage/
 npm-debug.log*
 .DS_Store

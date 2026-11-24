@@ -22,32 +22,32 @@ function publicProduct(product) {
   };
 }
 
-function listProducts(req, res) {
+async function listProducts(req, res) {
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 24));
   const conditions = ['p.active = 1'];
   const params = [];
   if (req.query.category) {
-    conditions.push('(c.slug = ? OR c.name = ? COLLATE NOCASE)');
     params.push(req.query.category, req.query.category);
+    conditions.push(`(c.slug = $${params.length - 1} OR LOWER(c.name) = LOWER($${params.length}))`);
   }
   if (req.query.search) {
-    conditions.push('(p.name LIKE ? OR p.description LIKE ?)');
     params.push(`%${req.query.search}%`, `%${req.query.search}%`);
+    conditions.push(`(p.name ILIKE $${params.length - 1} OR p.description ILIKE $${params.length})`);
   }
   const minPrice = Number(req.query.minPrice);
   if (req.query.minPrice !== undefined && Number.isFinite(minPrice) && minPrice >= 0) {
-    conditions.push('p.price >= ?');
     params.push(minPrice);
+    conditions.push(`p.price >= $${params.length}`);
   }
   const maxPrice = Number(req.query.maxPrice);
   if (req.query.maxPrice !== undefined && Number.isFinite(maxPrice) && maxPrice >= 0) {
-    conditions.push('p.price <= ?');
     params.push(maxPrice);
+    conditions.push(`p.price <= $${params.length}`);
   }
   if (req.query.size) {
-    conditions.push("EXISTS (SELECT 1 FROM json_each(p.sizes) WHERE value = ?)");
     params.push(String(req.query.size).slice(0, 20));
+    conditions.push(`EXISTS (SELECT 1 FROM jsonb_array_elements_text(CASE WHEN left(p.sizes, 1) = '[' THEN p.sizes::jsonb ELSE '[]'::jsonb END) AS matching_size(value) WHERE matching_size.value = $${params.length})`);
   }
   const where = conditions.join(' AND ');
   const sortBy = {
@@ -55,41 +55,42 @@ function listProducts(req, res) {
     'price-asc': 'p.price ASC',
     'price-desc': 'p.price DESC'
   }[req.query.sort] || 'p.featured DESC, p.created_at DESC';
-  const total = db.prepare(`SELECT COUNT(*) AS count FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE ${where}`)
-    .get(...params).count;
-  const products = db.prepare(`SELECT p.id, p.name, p.slug, p.description, p.price, p.compare_at_price AS compareAtPrice,
-    p.image_url AS imageUrl, p.sizes, p.colors, p.stock, p.featured, p.new_arrival AS newArrival,
-    p.best_seller AS bestSeller, c.name AS category, c.slug AS categorySlug
+  const totalRow = await db.one(`SELECT COUNT(*)::int AS count FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE ${where}`, params);
+  const products = await db.many(`SELECT p.id, p.name, p.slug, p.description, p.price, p.compare_at_price AS "compareAtPrice",
+    p.image_url AS "imageUrl", p.sizes, p.colors, p.stock, p.featured, p.new_arrival AS "newArrival",
+    p.best_seller AS "bestSeller", c.name AS category, c.slug AS "categorySlug"
     FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE ${where}
-    ORDER BY ${sortBy} LIMIT ? OFFSET ?`)
-    .all(...params, limit, (page - 1) * limit);
+    ORDER BY ${sortBy} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`, [...params, limit, (page - 1) * limit]);
+  const total = totalRow.count;
   res.json({ products: products.map(publicProduct), pagination: { page, limit, total, pages: Math.ceil(total / limit) } });
 }
 
-function getProduct(req, res) {
-  const product = db.prepare(`SELECT p.id, p.name, p.slug, p.description, p.price,
-    p.compare_at_price AS compareAtPrice, p.image_url AS imageUrl, p.sizes, p.colors,
-    p.stock, p.featured, p.new_arrival AS newArrival, p.best_seller AS bestSeller,
-    c.name AS category, c.slug AS categorySlug FROM products p LEFT JOIN categories c ON c.id=p.category_id
-    WHERE p.active=1 AND (p.slug=? OR CAST(p.id AS TEXT)=?)`).get(req.params.slug, req.params.slug);
+async function getProduct(req, res) {
+  const product = await db.one(`SELECT p.id, p.name, p.slug, p.description, p.price,
+    p.compare_at_price AS "compareAtPrice", p.image_url AS "imageUrl", p.sizes, p.colors,
+    p.stock, p.featured, p.new_arrival AS "newArrival", p.best_seller AS "bestSeller",
+    c.name AS category, c.slug AS "categorySlug" FROM products p LEFT JOIN categories c ON c.id=p.category_id
+    WHERE p.active=1 AND (p.slug=$1 OR CAST(p.id AS TEXT)=$2)`, [req.params.slug, req.params.slug]);
   if (!product) return res.status(404).json({ error: 'Product not found' });
   res.json({ product: publicProduct(product) });
 }
 
-function listCategories(req, res) {
-  const categories = db.prepare(`SELECT c.id, c.name, c.slug, c.description, COUNT(p.id) AS productCount
+async function listCategories(req, res) {
+  const categories = await db.many(`SELECT c.id, c.name, c.slug, c.description, COUNT(p.id)::int AS "productCount"
     FROM categories c LEFT JOIN products p ON p.category_id=c.id AND p.active=1
-    GROUP BY c.id ORDER BY c.name`).all();
+    GROUP BY c.id ORDER BY c.name`);
   res.json({ categories });
 }
 
-function publicSettings(req, res) {
+async function publicSettings(req, res) {
   const allowed = [
     'store_name', 'currency', 'contact_email', 'shipping_fee', 'delivery_fee_default',
     'delivery_fee_lagos', 'free_delivery_threshold', 'announcement'
   ];
-  const settings = db.prepare(`SELECT key, value FROM settings WHERE key IN (${allowed.map(() => '?').join(',')})`)
-    .all(...allowed);
+  const settings = await db.many(
+    `SELECT key, value FROM settings WHERE key IN (${allowed.map((_, index) => `$${index + 1}`).join(',')})`,
+    allowed
+  );
   res.json({
     settings: {
       ...Object.fromEntries(settings.map(({ key, value }) => [key, value])),

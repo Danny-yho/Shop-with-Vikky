@@ -1,22 +1,24 @@
-PRAGMA foreign_keys = ON;
-
 CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
-  email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  email TEXT NOT NULL,
   password_hash TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'admin' CHECK (role IN ('admin')),
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx ON users (LOWER(email));
+
 CREATE TABLE IF NOT EXISTS categories (
-  id INTEGER PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
   description TEXT NOT NULL DEFAULT '',
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS categories_name_lower_idx ON categories (LOWER(name));
+
 CREATE TABLE IF NOT EXISTS products (
-  id INTEGER PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
@@ -24,6 +26,7 @@ CREATE TABLE IF NOT EXISTS products (
   price INTEGER NOT NULL CHECK (price >= 0),
   compare_at_price INTEGER CHECK (compare_at_price IS NULL OR compare_at_price >= price),
   image_url TEXT NOT NULL DEFAULT '',
+  image_public_id TEXT NOT NULL DEFAULT '',
   sizes TEXT NOT NULL DEFAULT '[]',
   colors TEXT NOT NULL DEFAULT '[]',
   stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
@@ -31,11 +34,17 @@ CREATE TABLE IF NOT EXISTS products (
   featured INTEGER NOT NULL DEFAULT 0 CHECK (featured IN (0, 1)),
   new_arrival INTEGER NOT NULL DEFAULT 0 CHECK (new_arrival IN (0, 1)),
   best_seller INTEGER NOT NULL DEFAULT 0 CHECK (best_seller IN (0, 1)),
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image_public_id TEXT NOT NULL DEFAULT '';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sizes TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS colors TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS new_arrival INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS best_seller INTEGER NOT NULL DEFAULT 0;
+
 CREATE TABLE IF NOT EXISTS orders (
-  id INTEGER PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   tracking_code TEXT NOT NULL UNIQUE,
   customer_name TEXT NOT NULL,
   email TEXT NOT NULL,
@@ -47,11 +56,12 @@ CREATE TABLE IF NOT EXISTS orders (
   total INTEGER NOT NULL CHECK (total >= 0),
   inventory_restored INTEGER NOT NULL DEFAULT 0 CHECK (inventory_restored IN (0, 1)),
   currency TEXT NOT NULL DEFAULT 'NGN',
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
 CREATE TABLE IF NOT EXISTS order_items (
-  id INTEGER PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
   product_name TEXT NOT NULL,
@@ -61,24 +71,30 @@ CREATE TABLE IF NOT EXISTS order_items (
   selected_size TEXT NOT NULL DEFAULT '',
   selected_color TEXT NOT NULL DEFAULT ''
 );
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS selected_size TEXT NOT NULL DEFAULT '';
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS selected_color TEXT NOT NULL DEFAULT '';
+
 CREATE TABLE IF NOT EXISTS contacts (
-  id INTEGER PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   subject TEXT NOT NULL,
   message TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
 CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-  id INTEGER PRIMARY KEY,
-  email TEXT NOT NULL UNIQUE COLLATE NOCASE,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  id SERIAL PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL,
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_active ON products(active, featured);
 CREATE INDEX IF NOT EXISTS idx_orders_tracking ON orders(tracking_code);

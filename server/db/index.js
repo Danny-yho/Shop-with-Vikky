@@ -1,30 +1,61 @@
 const fs = require('fs');
 const path = require('path');
-const Database = require('better-sqlite3');
+const { Pool } = require('pg');
 const config = require('../utils/config');
 
-fs.mkdirSync(path.dirname(config.databasePath), { recursive: true });
-const db = new Database(config.databasePath);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
-db.exec(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'));
-db.prepare('UPDATE settings SET value = ? WHERE key = ? AND value = ?')
-  .run('“Style you love, delivered quickly and reliably.”', 'announcement', 'Free delivery on orders above ₦50,000');
+const pool = new Pool({
+  connectionString: config.databaseUrl,
+  ssl: { rejectUnauthorized: false }
+});
 
-const productColumns = new Set(db.prepare('PRAGMA table_info(products)').all().map(({ name }) => name));
-const productMigrations = {
-  sizes: "TEXT NOT NULL DEFAULT '[]'",
-  colors: "TEXT NOT NULL DEFAULT '[]'",
-  new_arrival: 'INTEGER NOT NULL DEFAULT 0 CHECK (new_arrival IN (0, 1))',
-  best_seller: 'INTEGER NOT NULL DEFAULT 0 CHECK (best_seller IN (0, 1))'
-};
-for (const [column, definition] of Object.entries(productMigrations)) {
-  if (!productColumns.has(column)) db.exec(`ALTER TABLE products ADD COLUMN ${column} ${definition}`);
+async function query(text, params = []) {
+  return pool.query(text, params);
 }
 
-const orderItemColumns = new Set(db.prepare('PRAGMA table_info(order_items)').all().map(({ name }) => name));
-for (const [column, definition] of Object.entries({ selected_size: "TEXT NOT NULL DEFAULT ''", selected_color: "TEXT NOT NULL DEFAULT ''" })) {
-  if (!orderItemColumns.has(column)) db.exec(`ALTER TABLE order_items ADD COLUMN ${column} ${definition}`);
+async function one(text, params = []) {
+  const result = await query(text, params);
+  return result.rows[0];
 }
 
-module.exports = db;
+async function many(text, params = []) {
+  const result = await query(text, params);
+  return result.rows;
+}
+
+async function withTransaction(work) {
+  const client = await pool.connect();
+  const tx = {
+    query: (text, params = []) => client.query(text, params),
+    one: async (text, params = []) => (await client.query(text, params)).rows[0],
+    many: async (text, params = []) => (await client.query(text, params)).rows
+  };
+  try {
+    await client.query('BEGIN');
+    const value = await work(tx);
+    await client.query('COMMIT');
+    return value;
+  } catch (error) {
+    try { await client.query('ROLLBACK'); } catch { /* connection already failed */ }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function initDb() {
+  if (!config.databaseUrl) {
+    throw new Error('DATABASE_URL is required');
+  }
+  const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+  await pool.query(schema);
+  await pool.query(
+    'UPDATE settings SET value = $1 WHERE key = $2 AND value = $3',
+    ['“Style you love, delivered quickly and reliably.”', 'announcement', 'Free delivery on orders above ₦50,000']
+  );
+}
+
+async function close() {
+  await pool.end();
+}
+
+module.exports = { pool, query, one, many, withTransaction, initDb, close };

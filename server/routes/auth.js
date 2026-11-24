@@ -5,12 +5,13 @@ const { authenticate } = require('../middleware/auth');
 const { issueToken } = require('../middleware/csrf');
 const validate = require('../middleware/validate');
 const schemas = require('../utils/schemas');
+const asyncHandler = require('../middleware/async-handler');
 
 const router = express.Router();
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false });
 router.get('/csrf', issueToken);
-router.post('/login', loginLimiter, validate(schemas.login), login);
+router.post('/login', loginLimiter, validate(schemas.login), asyncHandler(login));
 router.post('/logout', authenticate, logout);
-router.get('/me', authenticate, me);
+router.get('/me', authenticate, asyncHandler(me));
 
 module.exports = router;

@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const config = require('./utils/config');
 const db = require('./db');
 const { protect } = require('./middleware/csrf');
+const asyncHandler = require('./middleware/async-handler');
 const { notFound, errorHandler } = require('./middleware/error-handler');
 
 const app = express();
@@ -31,7 +32,13 @@ app.use(helmet({
   }
 }));
 app.use(compression());
-app.use(cors({ origin: config.clientOrigin, credentials: true }));
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || config.allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(null, false);
+  },
+  credentials: true
+}));
 app.use('/api', rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 300,
@@ -47,11 +54,10 @@ app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 app.use(cookieParser());
 app.use(protect);
 
-app.get('/health', (req, res) => {
-  db.prepare('SELECT 1').get();
+app.get('/health', asyncHandler(async (req, res) => {
+  await db.query('SELECT 1');
   res.json({ status: 'ok' });
-});
-app.use('/uploads', express.static(config.uploadDir, { fallthrough: false, maxAge: '1d' }));
+}));
 app.use(express.static(path.resolve(__dirname, '..', 'public'), { index: 'index.html' }));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api', require('./routes/catalog'));

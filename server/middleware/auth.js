@@ -8,7 +8,7 @@ function authenticate(req, res, next) {
     req.user = jwt.verify(token, config.jwtSecret);
     next();
   } catch {
-    res.clearCookie('shop_auth', { httpOnly: true, sameSite: 'lax', secure: config.cookieSecure });
+    res.clearCookie('shop_auth', { httpOnly: true, sameSite: config.cookieSameSite, secure: config.cookieSecure });
     res.status(401).json({ error: 'Session is invalid or expired' });
   }
 }

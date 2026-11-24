@@ -2,7 +2,7 @@
   "name": "shop-with-vikky-api",
   "version": "1.0.0",
   "private": true,
-  "description": "Express and SQLite backend for Shop with Vikky",
+  "description": "Express storefront and API for Shop with Vikky",
   "main": "server/app.js",
   "scripts": {
     "start": "node server/index.js",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^13.2.0",
+    "cloudinary": "^2.11.0",
     "compression": "^1.8.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -26,6 +26,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.1",
     "nodemailer": "^10.6.1",
+    "pg": "^8.23.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {

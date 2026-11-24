@@ -1,4 +1,5 @@
 const db = require('../db');
+const { publicIdFromUrl, uploadBuffer, destroyImage } = require('../utils/cloudinary');
 
 function productList(rows) {
   return rows.map((product) => ({
@@ -12,126 +13,152 @@ function productList(rows) {
   }));
 }
 
-function listProducts(req, res) {
-  res.json({ products: productList(db.prepare(`SELECT p.*, c.name AS category FROM products p
-    LEFT JOIN categories c ON c.id=p.category_id ORDER BY p.created_at DESC`).all()) });
+async function listProducts(req, res) {
+  const rows = await db.many(`SELECT p.*, c.name AS category FROM products p
+    LEFT JOIN categories c ON c.id=p.category_id ORDER BY p.created_at DESC`);
+  res.json({ products: productList(rows) });
 }
 
-function createProduct(req, res) {
-  const result = db.prepare(`INSERT INTO products
-    (category_id, name, slug, description, price, compare_at_price, image_url, sizes, colors,
+async function createProduct(req, res) {
+  const imageUrl = req.body.imageUrl || '';
+  const product = await db.one(`INSERT INTO products
+    (category_id, name, slug, description, price, compare_at_price, image_url, image_public_id, sizes, colors,
      stock, active, featured, new_arrival, best_seller)
-    VALUES (@categoryId, @name, @slug, @description, @price, @compareAtPrice, @imageUrl, @sizes, @colors,
-     @stock, @active, @featured, @newArrival, @bestSeller)`)
-    .run({
-      ...req.body,
-      sizes: JSON.stringify(req.body.sizes),
-      colors: JSON.stringify(req.body.colors),
-      active: Number(req.body.active),
-      featured: Number(req.body.featured),
-      newArrival: Number(req.body.newArrival),
-      bestSeller: Number(req.body.bestSeller)
-    });
-  res.status(201).json({ product: db.prepare('SELECT * FROM products WHERE id=?').get(result.lastInsertRowid) });
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+    RETURNING *`, [
+    req.body.categoryId,
+    req.body.name,
+    req.body.slug,
+    req.body.description,
+    req.body.price,
+    req.body.compareAtPrice,
+    imageUrl,
+    publicIdFromUrl(imageUrl),
+    JSON.stringify(req.body.sizes),
+    JSON.stringify(req.body.colors),
+    req.body.stock,
+    Number(req.body.active),
+    Number(req.body.featured),
+    Number(req.body.newArrival),
+    Number(req.body.bestSeller)
+  ]);
+  res.status(201).json({ product });
 }
 
-function updateProduct(req, res) {
-  const existing = db.prepare('SELECT * FROM products WHERE id=?').get(req.params.id);
+async function updateProduct(req, res) {
+  const existing = await db.one('SELECT * FROM products WHERE id=$1', [req.params.id]);
   if (!existing) return res.status(404).json({ error: 'Product not found' });
-  const fields = {
-    ...req.body,
-    categoryId: req.body.categoryId === undefined ? existing.category_id : req.body.categoryId,
-    compareAtPrice: req.body.compareAtPrice === undefined ? existing.compare_at_price : req.body.compareAtPrice,
-    imageUrl: req.body.imageUrl === undefined ? existing.image_url : req.body.imageUrl,
-    sizes: JSON.stringify(req.body.sizes === undefined ? JSON.parse(existing.sizes || '[]') : req.body.sizes),
-    colors: JSON.stringify(req.body.colors === undefined ? JSON.parse(existing.colors || '[]') : req.body.colors),
-    active: Number(req.body.active === undefined ? Boolean(existing.active) : req.body.active),
-    featured: Number(req.body.featured === undefined ? Boolean(existing.featured) : req.body.featured),
-    newArrival: Number(req.body.newArrival === undefined ? Boolean(existing.new_arrival) : req.body.newArrival),
-    bestSeller: Number(req.body.bestSeller === undefined ? Boolean(existing.best_seller) : req.body.bestSeller),
-    id: existing.id
-  };
-  db.prepare(`UPDATE products SET category_id=@categoryId, name=@name, slug=@slug, description=@description,
-    price=@price, compare_at_price=@compareAtPrice, image_url=@imageUrl, sizes=@sizes, colors=@colors,
-    stock=@stock, active=@active, featured=@featured, new_arrival=@newArrival, best_seller=@bestSeller,
-    updated_at=datetime('now') WHERE id=@id`).run(fields);
-  res.json({ product: db.prepare('SELECT * FROM products WHERE id=?').get(existing.id) });
+  const imageUrl = req.body.imageUrl === undefined ? existing.image_url : req.body.imageUrl;
+  const fields = [
+    req.body.categoryId === undefined ? existing.category_id : req.body.categoryId,
+    req.body.name,
+    req.body.slug,
+    req.body.description,
+    req.body.price,
+    req.body.compareAtPrice === undefined ? existing.compare_at_price : req.body.compareAtPrice,
+    imageUrl,
+    publicIdFromUrl(imageUrl),
+    JSON.stringify(req.body.sizes === undefined ? JSON.parse(existing.sizes || '[]') : req.body.sizes),
+    JSON.stringify(req.body.colors === undefined ? JSON.parse(existing.colors || '[]') : req.body.colors),
+    req.body.stock,
+    Number(req.body.active === undefined ? Boolean(existing.active) : req.body.active),
+    Number(req.body.featured === undefined ? Boolean(existing.featured) : req.body.featured),
+    Number(req.body.newArrival === undefined ? Boolean(existing.new_arrival) : req.body.newArrival),
+    Number(req.body.bestSeller === undefined ? Boolean(existing.best_seller) : req.body.bestSeller),
+    existing.id
+  ];
+  const product = await db.one(`UPDATE products SET category_id=$1, name=$2, slug=$3, description=$4,
+    price=$5, compare_at_price=$6, image_url=$7, image_public_id=$8, sizes=$9, colors=$10,
+    stock=$11, active=$12, featured=$13, new_arrival=$14, best_seller=$15,
+    updated_at=NOW() WHERE id=$16 RETURNING *`, fields);
+  const previousPublicId = existing.image_public_id || publicIdFromUrl(existing.image_url);
+  const nextPublicId = publicIdFromUrl(imageUrl);
+  if (previousPublicId && previousPublicId !== nextPublicId) await destroyImage(previousPublicId);
+  res.json({ product });
 }
 
-function deleteProduct(req, res) {
-  const result = db.prepare('DELETE FROM products WHERE id=?').run(req.params.id);
-  if (!result.changes) return res.status(404).json({ error: 'Product not found' });
+async function deleteProduct(req, res) {
+  const existing = await db.one('SELECT id, image_url, image_public_id FROM products WHERE id=$1', [req.params.id]);
+  if (!existing) return res.status(404).json({ error: 'Product not found' });
+  await db.query('DELETE FROM products WHERE id=$1', [existing.id]);
+  await destroyImage(existing.image_public_id || publicIdFromUrl(existing.image_url));
   res.status(204).end();
 }
 
-function listCategories(req, res) {
-  res.json({ categories: db.prepare('SELECT * FROM categories ORDER BY name').all() });
+async function listCategories(req, res) {
+  res.json({ categories: await db.many('SELECT * FROM categories ORDER BY name') });
 }
 
-function createCategory(req, res) {
-  const result = db.prepare('INSERT INTO categories (name, slug, description) VALUES (?, ?, ?)')
-    .run(req.body.name, req.body.slug, req.body.description);
-  res.status(201).json({ category: db.prepare('SELECT * FROM categories WHERE id=?').get(result.lastInsertRowid) });
+async function createCategory(req, res) {
+  const category = await db.one(
+    'INSERT INTO categories (name, slug, description) VALUES ($1, $2, $3) RETURNING *',
+    [req.body.name, req.body.slug, req.body.description]
+  );
+  res.status(201).json({ category });
 }
 
-function updateCategory(req, res) {
-  const result = db.prepare('UPDATE categories SET name=?, slug=?, description=? WHERE id=?')
-    .run(req.body.name, req.body.slug, req.body.description, req.params.id);
-  if (!result.changes) return res.status(404).json({ error: 'Category not found' });
-  res.json({ category: db.prepare('SELECT * FROM categories WHERE id=?').get(req.params.id) });
+async function updateCategory(req, res) {
+  const category = await db.one(
+    'UPDATE categories SET name=$1, slug=$2, description=$3 WHERE id=$4 RETURNING *',
+    [req.body.name, req.body.slug, req.body.description, req.params.id]
+  );
+  if (!category) return res.status(404).json({ error: 'Category not found' });
+  res.json({ category });
 }
 
-function deleteCategory(req, res) {
-  const result = db.prepare('DELETE FROM categories WHERE id=?').run(req.params.id);
-  if (!result.changes) return res.status(404).json({ error: 'Category not found' });
+async function deleteCategory(req, res) {
+  const result = await db.query('DELETE FROM categories WHERE id=$1', [req.params.id]);
+  if (!result.rowCount) return res.status(404).json({ error: 'Category not found' });
   res.status(204).end();
 }
 
-function listOrders(req, res) {
-  const orders = db.prepare('SELECT id, tracking_code AS trackingCode, customer_name AS customerName, email, phone, address, status, payment_status AS paymentStatus, payment_reference AS paymentReference, total, currency, created_at AS createdAt FROM orders ORDER BY created_at DESC LIMIT 200').all();
+async function listOrders(req, res) {
+  const orders = await db.many(`SELECT id, tracking_code AS "trackingCode", customer_name AS "customerName", email, phone, address, status, payment_status AS "paymentStatus", payment_reference AS "paymentReference", total, currency, created_at AS "createdAt" FROM orders ORDER BY created_at DESC LIMIT 200`);
   res.json({ orders });
 }
 
-function updateOrder(req, res) {
-  const order = db.prepare('SELECT id, status, inventory_restored FROM orders WHERE id=?').get(req.params.id);
+async function updateOrder(req, res) {
+  const order = await db.one('SELECT id, status, inventory_restored FROM orders WHERE id=$1', [req.params.id]);
   if (!order) return res.status(404).json({ error: 'Order not found' });
   if (order.status === 'cancelled' && req.body.status !== 'cancelled') {
     return res.status(409).json({ error: 'Cancelled orders cannot be reopened' });
   }
-  const update = db.transaction(() => {
+  await db.withTransaction(async (tx) => {
     if (req.body.status === 'cancelled' && !order.inventory_restored) {
-      db.prepare('UPDATE products SET stock=stock+oi.quantity, updated_at=datetime(\'now\') FROM order_items oi WHERE products.id=oi.product_id AND oi.order_id=?')
-        .run(order.id);
-      db.prepare('UPDATE orders SET inventory_restored=1 WHERE id=?').run(order.id);
+      await tx.query(`UPDATE products SET stock=products.stock+oi.quantity, updated_at=NOW()
+        FROM order_items oi WHERE products.id=oi.product_id AND oi.order_id=$1`, [order.id]);
+      await tx.query('UPDATE orders SET inventory_restored=1 WHERE id=$1', [order.id]);
     }
-    db.prepare("UPDATE orders SET status=?, updated_at=datetime('now') WHERE id=?").run(req.body.status, order.id);
+    await tx.query('UPDATE orders SET status=$1, updated_at=NOW() WHERE id=$2', [req.body.status, order.id]);
   });
-  update();
-  res.json({ order: db.prepare('SELECT id, tracking_code AS trackingCode, status, payment_status AS paymentStatus FROM orders WHERE id=?').get(order.id) });
+  const updated = await db.one('SELECT id, tracking_code AS "trackingCode", status, payment_status AS "paymentStatus" FROM orders WHERE id=$1', [order.id]);
+  res.json({ order: updated });
 }
 
-function listSettings(req, res) {
-  res.json({ settings: db.prepare('SELECT key, value FROM settings ORDER BY key').all() });
+async function listSettings(req, res) {
+  res.json({ settings: await db.many('SELECT key, value FROM settings ORDER BY key') });
 }
 
-function updateSettings(req, res) {
-  const write = db.prepare("INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=datetime('now')");
-  const transaction = db.transaction((settings) => {
-    for (const [key, value] of Object.entries(settings)) write.run(key, String(value));
+async function updateSettings(req, res) {
+  await db.withTransaction(async (tx) => {
+    for (const [key, value] of Object.entries(req.body)) {
+      await tx.query(`INSERT INTO settings (key, value, updated_at) VALUES ($1, $2, NOW())
+        ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()`, [key, String(value)]);
+    }
   });
-  transaction(req.body);
-  res.json({ settings: db.prepare('SELECT key, value FROM settings ORDER BY key').all() });
+  res.json({ settings: await db.many('SELECT key, value FROM settings ORDER BY key') });
 }
 
-function uploadImage(req, res) {
+async function uploadImage(req, res) {
   if (!req.file) return res.status(400).json({ error: 'Image file is required' });
-  res.status(201).json({ url: `/uploads/${req.file.filename}` });
+  const result = await uploadBuffer(req.file.buffer);
+  res.status(201).json({ url: result.secure_url, publicId: result.public_id });
 }
 
-function listMessages(req, res) {
+async function listMessages(req, res) {
   res.json({
-    contacts: db.prepare('SELECT id, name, email, subject, message, created_at AS createdAt FROM contacts ORDER BY created_at DESC').all(),
-    subscribers: db.prepare('SELECT id, email, created_at AS createdAt FROM newsletter_subscribers ORDER BY created_at DESC').all()
+    contacts: await db.many('SELECT id, name, email, subject, message, created_at AS "createdAt" FROM contacts ORDER BY created_at DESC'),
+    subscribers: await db.many('SELECT id, email, created_at AS "createdAt" FROM newsletter_subscribers ORDER BY created_at DESC')
   });
 }
 

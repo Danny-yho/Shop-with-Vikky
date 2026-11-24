@@ -4,7 +4,7 @@ const config = require('../utils/config');
 const cookieOptions = {
   httpOnly: false,
   secure: config.cookieSecure,
-  sameSite: 'lax',
+  sameSite: config.cookieSameSite,
   path: '/'
 };
 

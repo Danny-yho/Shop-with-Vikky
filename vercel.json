@@ -1,0 +1,5 @@
+{
+  "buildCommand": "node scripts/write-frontend-env.js",
+  "outputDirectory": "public",
+  "framework": null
+}

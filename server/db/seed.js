@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const db = require('./index');
 
+async function seed() {
+
 const categories = [
   ['Dresses', 'dresses', 'Easy-to-wear dresses for everyday plans and special moments.'],
   ['Tops', 'tops', 'Polished tops to style your way.'],
@@ -45,93 +47,103 @@ const products = [
   ['Vikky African Skin Top', 'vikky-african-skin-top', 'Tops', 'A relaxed statement top styled for warm, confident everyday looks.', 10500, 20, '/images/vikky-native-set.jpg', ['XS','S','M','L','XL','XXL'], ['White','Black'], 1, 1, 0]
 ];
 
-const seed = db.transaction(() => {
-  const insertCategory = db.prepare('INSERT OR IGNORE INTO categories (name, slug, description) VALUES (?, ?, ?)');
-  categories.forEach((row) => insertCategory.run(...row));
-  const getCategory = db.prepare('SELECT id FROM categories WHERE name = ?');
-  const migrationKey = 'fashion_catalog_v1';
-  const migrated = db.prepare('SELECT value FROM settings WHERE key=?').get(migrationKey);
-  const updateProduct = db.prepare(`UPDATE products SET category_id=?, name=?, slug=?, description=?, price=?,
-    stock=?, image_url=?, sizes=?, colors=?, featured=?, new_arrival=?, best_seller=?, updated_at=datetime('now')
-    WHERE id=?`);
-  const legacyProduct = db.prepare('SELECT id FROM products WHERE slug=?');
-  const insertProduct = db.prepare(`INSERT OR IGNORE INTO products
-    (category_id, name, slug, description, price, stock, image_url, sizes, colors, featured, new_arrival, best_seller)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
-  if (!migrated) {
-    products.forEach((product, index) => {
-      const [name, slug, category, description, price, stock, imageUrl, sizes, colors, featured, newArrival, bestSeller] = product;
-      const existing = legacyProduct.get(legacySlugs[index]);
-      if (existing) {
-        updateProduct.run(getCategory.get(category).id, name, slug, description, price, stock, imageUrl,
-          JSON.stringify(sizes), JSON.stringify(colors), featured, newArrival, bestSeller, existing.id);
-      } else {
-        insertProduct.run(getCategory.get(category).id, name, slug, description, price, stock, imageUrl,
-          JSON.stringify(sizes), JSON.stringify(colors), featured, newArrival, bestSeller);
+  await db.initDb();
+  await db.withTransaction(async (tx) => {
+    for (const row of categories) {
+      await tx.query('INSERT INTO categories (name, slug, description) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', row);
+    }
+    const categoryId = async (name) => (await tx.one('SELECT id FROM categories WHERE LOWER(name) = LOWER($1)', [name])).id;
+    const migrationKey = 'fashion_catalog_v1';
+    const migrated = await tx.one('SELECT value FROM settings WHERE key=$1', [migrationKey]);
+    if (!migrated) {
+      for (let index = 0; index < products.length; index += 1) {
+        const [name, slug, category, description, price, stock, imageUrl, sizes, colors, featured, newArrival, bestSeller] = products[index];
+        const existing = await tx.one('SELECT id FROM products WHERE slug=$1', [legacySlugs[index]]);
+        const categoryRowId = await categoryId(category);
+        if (existing) {
+          await tx.query(`UPDATE products SET category_id=$1, name=$2, slug=$3, description=$4, price=$5,
+            stock=$6, image_url=$7, sizes=$8, colors=$9, featured=$10, new_arrival=$11, best_seller=$12, updated_at=NOW()
+            WHERE id=$13`, [categoryRowId, name, slug, description, price, stock, imageUrl,
+            JSON.stringify(sizes), JSON.stringify(colors), featured, newArrival, bestSeller, existing.id]);
+        } else {
+          await tx.query(`INSERT INTO products
+            (category_id, name, slug, description, price, stock, image_url, sizes, colors, featured, new_arrival, best_seller)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            ON CONFLICT (slug) DO NOTHING`, [categoryRowId, name, slug, description, price, stock, imageUrl,
+            JSON.stringify(sizes), JSON.stringify(colors), featured, newArrival, bestSeller]);
+        }
       }
-    });
-    db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(migrationKey, 'done');
-    db.prepare(`DELETE FROM categories WHERE slug IN ('handbags','jewelry','womenswear','accessories','beauty')
-      AND NOT EXISTS (SELECT 1 FROM products WHERE products.category_id=categories.id)`).run();
-  } else {
-    products.forEach(([name, slug, category, description, price, stock, imageUrl, sizes, colors, featured, newArrival, bestSeller]) => {
-      insertProduct.run(getCategory.get(category).id, name, slug, description, price, stock, imageUrl,
-        JSON.stringify(sizes), JSON.stringify(colors), featured, newArrival, bestSeller);
-    });
-  }
-  const bestSellerMigration = 'fashion_catalog_v2';
-  if (!db.prepare('SELECT value FROM settings WHERE key=?').get(bestSellerMigration)) {
-    const seededSlugs = products.map((product) => product[1]);
-    const placeholders = seededSlugs.map(() => '?').join(',');
-    db.prepare(`UPDATE products SET best_seller=CASE WHEN slug IN (${bestSellerSlugs.map(() => '?').join(',')}) THEN 1 ELSE 0 END
-      WHERE slug IN (${placeholders})`).run(...bestSellerSlugs, ...seededSlugs);
-    db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(bestSellerMigration, 'done');
-  }
-  const flagMigration = 'fashion_catalog_v3';
-  if (!db.prepare('SELECT value FROM settings WHERE key=?').get(flagMigration)) {
-    const updateFlags = db.prepare('UPDATE products SET featured=?, new_arrival=?, best_seller=? WHERE slug=?');
-    products.forEach((product) => updateFlags.run(product[9], product[10], product[11], product[1]));
-    db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(flagMigration, 'done');
-  }
-  const variantMigration = 'fashion_catalog_v4';
-  if (!db.prepare('SELECT value FROM settings WHERE key=?').get(variantMigration)) {
-    const updateVariants = db.prepare('UPDATE products SET sizes=?, colors=? WHERE slug=?');
-    products.forEach((product) => updateVariants.run(JSON.stringify(product[7]), JSON.stringify(product[8]), product[1]));
-    db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(variantMigration, 'done');
-  }
+      await tx.query('INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', [migrationKey, 'done']);
+      await tx.query(`DELETE FROM categories WHERE slug IN ('handbags','jewelry','womenswear','accessories','beauty')
+        AND NOT EXISTS (SELECT 1 FROM products WHERE products.category_id=categories.id)`);
+    } else {
+      for (const [name, slug, category, description, price, stock, imageUrl, sizes, colors, featured, newArrival, bestSeller] of products) {
+        await tx.query(`INSERT INTO products
+          (category_id, name, slug, description, price, stock, image_url, sizes, colors, featured, new_arrival, best_seller)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          ON CONFLICT (slug) DO NOTHING`, [await categoryId(category), name, slug, description, price, stock, imageUrl,
+          JSON.stringify(sizes), JSON.stringify(colors), featured, newArrival, bestSeller]);
+      }
+    }
+    const bestSellerMigration = 'fashion_catalog_v2';
+    if (!(await tx.one('SELECT value FROM settings WHERE key=$1', [bestSellerMigration]))) {
+      const seededSlugs = products.map((product) => product[1]);
+      const params = [...bestSellerSlugs, ...seededSlugs];
+      const bestPlaceholders = bestSellerSlugs.map((_, index) => `$${index + 1}`).join(',');
+      const seededPlaceholders = seededSlugs.map((_, index) => `$${bestSellerSlugs.length + index + 1}`).join(',');
+      await tx.query(`UPDATE products SET best_seller=CASE WHEN slug IN (${bestPlaceholders}) THEN 1 ELSE 0 END
+        WHERE slug IN (${seededPlaceholders})`, params);
+      await tx.query('INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', [bestSellerMigration, 'done']);
+    }
+    const flagMigration = 'fashion_catalog_v3';
+    if (!(await tx.one('SELECT value FROM settings WHERE key=$1', [flagMigration]))) {
+      for (const product of products) {
+        await tx.query('UPDATE products SET featured=$1, new_arrival=$2, best_seller=$3 WHERE slug=$4', [product[9], product[10], product[11], product[1]]);
+      }
+      await tx.query('INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', [flagMigration, 'done']);
+    }
+    const variantMigration = 'fashion_catalog_v4';
+    if (!(await tx.one('SELECT value FROM settings WHERE key=$1', [variantMigration]))) {
+      for (const product of products) {
+        await tx.query('UPDATE products SET sizes=$1, colors=$2 WHERE slug=$3', [JSON.stringify(product[7]), JSON.stringify(product[8]), product[1]]);
+      }
+      await tx.query('INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', [variantMigration, 'done']);
+    }
 
-  const refreshCatalogImage = db.prepare('UPDATE products SET image_url=?, price=? WHERE slug=?');
-  products.forEach(([name, slug, category, description, price, stock, imageUrl]) => {
-    refreshCatalogImage.run(imageUrl, price, slug);
+    for (const [, slug, , , price, , imageUrl] of products) {
+      await tx.query('UPDATE products SET image_url=$1, price=$2 WHERE slug=$3', [imageUrl, price, slug]);
+    }
+
+    const email = process.env.ADMIN_EMAIL;
+    const password = process.env.ADMIN_PASSWORD;
+    if (!email || !password || password.length < 12) {
+      throw new Error('Set ADMIN_EMAIL and ADMIN_PASSWORD (at least 12 characters) before seeding');
+    }
+    const adminExists = await tx.one('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [email]);
+    if (!adminExists) {
+      await tx.query('INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3)', [
+        process.env.ADMIN_NAME || 'Shop Administrator', email, bcrypt.hashSync(password, 12)
+      ]);
+    }
+    const defaults = [
+      ['store_name', 'Shop with Vikky'],
+      ['currency', 'NGN'],
+      ['contact_email', email],
+      ['shipping_fee', '5500'],
+      ['delivery_fee_default', '5500'],
+      ['delivery_fee_lagos', '3500'],
+      ['free_delivery_threshold', '50000'],
+      ['announcement', '“Style you love, delivered quickly and reliably.”']
+    ];
+    for (const row of defaults) {
+      await tx.query('INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', row);
+    }
   });
-
-  const email = process.env.ADMIN_EMAIL;
-  const password = process.env.ADMIN_PASSWORD;
-  if (!email || !password || password.length < 12) {
-    throw new Error('Set ADMIN_EMAIL and ADMIN_PASSWORD (at least 12 characters) before seeding');
-  }
-  const adminExists = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-  if (!adminExists) {
-    db.prepare('INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)')
-      .run(process.env.ADMIN_NAME || 'Shop Administrator', email, bcrypt.hashSync(password, 12));
-  }
-  const defaults = [
-    ['store_name', 'Shop with Vikky'],
-    ['currency', 'NGN'],
-    ['contact_email', email],
-    ['shipping_fee', '5500'],
-    ['delivery_fee_default', '5500'],
-    ['delivery_fee_lagos', '3500'],
-    ['free_delivery_threshold', '50000'],
-    ['announcement', '“Style you love, delivered quickly and reliably.”']
-  ];
-  const setting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
-  defaults.forEach((row) => setting.run(...row));
-});
-
-try {
-  seed();
-  console.log(`Seed complete: ${db.prepare('SELECT COUNT(*) AS count FROM products').get().count} products.`);
-} finally {
-  db.close();
+  const count = await db.one('SELECT COUNT(*)::int AS count FROM products');
+  console.log(`Seed complete: ${count.count} products.`);
 }
+
+seed().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+}).finally(() => db.close());

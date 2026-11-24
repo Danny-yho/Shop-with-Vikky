@@ -14,10 +14,10 @@ function errorHandler(error, req, res, next) {
   } else if (error.code === 'LIMIT_FILE_SIZE') {
     status = 413;
     message = 'Uploaded file is too large';
-  } else if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+  } else if (error.code === '23505' || error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
     status = 409;
     message = 'A record with that value already exists';
-  } else if (error.code && error.code.startsWith('SQLITE_CONSTRAINT')) {
+  } else if (error.code === '23503' || error.code === '23514' || (error.code && error.code.startsWith('SQLITE_CONSTRAINT'))) {
     status = 400;
     message = 'Request conflicts with stored data';
   }
