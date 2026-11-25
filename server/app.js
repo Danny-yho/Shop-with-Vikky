@@ -21,12 +21,12 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       baseUri: ["'self'"],
       objectSrc: ["'none'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://js.paystack.co'],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com', 'https://paystack.com'],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
       imgSrc: ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'", 'https://api.paystack.co'],
-      frameSrc: ['https://checkout.paystack.com'],
+      connectSrc: ["'self'"],
+      frameSrc: ["'self'"],
       formAction: ["'self'"]
     }
   }
@@ -63,7 +63,6 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api', require('./routes/catalog'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api', require('./routes/content'));
-app.use('/api/payments', require('./routes/payments'));
 app.use('/api/admin', require('./routes/admin'));
 app.use(notFound);
 app.use(errorHandler);

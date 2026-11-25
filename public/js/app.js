@@ -9,6 +9,27 @@ function setTheme(theme) {
     button.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
   });
 }
+function applyTheme(theme){localStorage.setItem(themeKey,theme);setTheme(theme)}
+function toggleTheme(button){
+  const nextTheme=document.documentElement.dataset.theme==='dark'?'light':'dark';
+  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!document.startViewTransition||reduceMotion){applyTheme(nextTheme);return}
+  const rect=button.getBoundingClientRect();
+  const x=rect.left+rect.width/2,y=rect.top+rect.height/2;
+  const radius=Math.hypot(Math.max(x,window.innerWidth-x),Math.max(y,window.innerHeight-y));
+  const root=document.documentElement;
+  root.style.setProperty('--x',`${x}px`);
+  root.style.setProperty('--y',`${y}px`);
+  root.style.setProperty('--r',`${radius}px`);
+  root.classList.add('theme-transition');
+  const transition=document.startViewTransition(()=>applyTheme(nextTheme));
+  transition.finished.finally(()=>{
+    root.classList.remove('theme-transition');
+    root.style.removeProperty('--x');
+    root.style.removeProperty('--y');
+    root.style.removeProperty('--r');
+  });
+}
 const sampleProducts = [
   {id:1,name:'Amara Purple Maxi Dress',slug:'amara-purple-maxi-dress',price:38500,category:'Dresses',images:['https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=80'],sizes:['XS','S','M','L','XL','XXL'],colors:['Purple'],stock:12,bestSeller:true},
   {id:2,name:'Lagos Glam Two-Piece',slug:'lagos-glam-two-piece',price:42000,category:'Two-Piece Sets',images:['https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=900&q=80'],sizes:['S','M','L','XL'],colors:['Lavender','Black'],stock:8,featured:1,newArrival:true},
@@ -70,11 +91,7 @@ function productCard(p){
 }
 async function loadProducts(){try{const d=await api('/products?limit=24'); return d.data||d.products||[]}catch{return sampleProducts}}
 function bindGlobal(){
-  document.querySelectorAll('[data-theme-toggle]').forEach((button) => button.addEventListener('click', () => {
-    const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    localStorage.setItem(themeKey, theme);
-    setTheme(theme);
-  }));
+  document.querySelectorAll('[data-theme-toggle]').forEach((button) => button.addEventListener('click', () => toggleTheme(button)));
   window.addEventListener('storage', (event) => {
     if (event.key === themeKey) setTheme(event.newValue === 'dark' ? 'dark' : 'light');
   });

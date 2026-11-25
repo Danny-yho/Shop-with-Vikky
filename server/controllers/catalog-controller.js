@@ -1,5 +1,4 @@
 const db = require('../db');
-const config = require('../utils/config');
 
 function parseList(value) {
   try {
@@ -93,8 +92,7 @@ async function publicSettings(req, res) {
   );
   res.json({
     settings: {
-      ...Object.fromEntries(settings.map(({ key, value }) => [key, value])),
-      paystackPublicKey: config.paystackPublicKey
+      ...Object.fromEntries(settings.map(({ key, value }) => [key, value]))
     }
   });
 }

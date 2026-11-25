@@ -9,8 +9,10 @@
 <script>
 const themeKey='swv-theme';
 function setTheme(theme){document.documentElement.dataset.theme=theme;document.querySelectorAll('[data-theme-toggle]').forEach(button=>{button.setAttribute('aria-pressed',String(theme==='dark'));button.setAttribute('aria-label',theme==='dark'?'Switch to light mode':'Switch to dark mode');button.title=theme==='dark'?'Switch to light mode':'Switch to dark mode'})}
+function applyTheme(theme){localStorage.setItem(themeKey,theme);setTheme(theme)}
+function toggleTheme(button){const nextTheme=document.documentElement.dataset.theme==='dark'?'light':'dark';const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;if(!document.startViewTransition||reduceMotion){applyTheme(nextTheme);return}const rect=button.getBoundingClientRect();const x=rect.left+rect.width/2,y=rect.top+rect.height/2;const radius=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));const root=document.documentElement;root.style.setProperty('--x',`${x}px`);root.style.setProperty('--y',`${y}px`);root.style.setProperty('--r',`${radius}px`);root.classList.add('theme-transition');document.startViewTransition(()=>applyTheme(nextTheme)).finished.finally(()=>{root.classList.remove('theme-transition');root.style.removeProperty('--x');root.style.removeProperty('--y');root.style.removeProperty('--r')})}
 setTheme(localStorage.getItem(themeKey)==='dark'?'dark':'light');
-document.querySelectorAll('[data-theme-toggle]').forEach(button=>button.addEventListener('click',()=>{const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';localStorage.setItem(themeKey,theme);setTheme(theme)}));
+document.querySelectorAll('[data-theme-toggle]').forEach(button=>button.addEventListener('click',()=>toggleTheme(button)));
 window.addEventListener('storage',event=>{if(event.key===themeKey)setTheme(event.newValue==='dark'?'dark':'light')});
 let csrf='';
 function mediaUrl(url){if(!url)return '';return /^https?:\/\//i.test(url)?url:url}

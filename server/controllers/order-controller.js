@@ -1,6 +1,5 @@
 const crypto = require('crypto');
 const db = require('../db');
-const config = require('../utils/config');
 const { sendOrderConfirmation } = require('../utils/email');
 
 async function settingAmount(tx, key, fallback) {
@@ -39,7 +38,7 @@ async function createOrder(input) {
     const order = await tx.one(`INSERT INTO orders
       (tracking_code, customer_name, email, phone, address, total, currency)
       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, [
-      trackingCode, input.name, input.email, input.phone, input.address, total, config.paystackCurrency
+      trackingCode, input.name, input.email, input.phone, input.address, total, 'NGN'
     ]);
     for (const item of lines) {
       await tx.query(`INSERT INTO order_items
@@ -50,7 +49,7 @@ async function createOrder(input) {
       await tx.query('UPDATE products SET stock=stock-$1, updated_at=NOW() WHERE id=$2', [item.quantity, item.id]);
     }
     return {
-      orderId: order.id, trackingCode, subtotal, deliveryFee: shipping, total, currency: config.paystackCurrency,
+      orderId: order.id, trackingCode, subtotal, deliveryFee: shipping, total, currency: 'NGN',
       items: lines.map((item) => ({
         productId: item.id, name: item.name, unitPrice: item.price, quantity: item.quantity,
         size: item.size, color: item.color, lineTotal: item.lineTotal
@@ -74,8 +73,7 @@ async function submitOrder(req, res) {
     order: {
       orderNumber: order.trackingCode, subtotal: order.subtotal, deliveryFee: order.deliveryFee,
       total: order.total, currency: order.currency, items: order.items
-    },
-    paystackPublicKey: config.paystackPublicKey
+    }
   });
 }
 
@@ -89,49 +87,4 @@ async function trackOrder(req, res) {
   res.json({ order: { ...order, items } });
 }
 
-async function updatePayment(orderId, reference, status) {
-  await db.query(`UPDATE orders SET payment_status=$1, payment_reference=COALESCE(payment_reference, $2),
-    updated_at=NOW() WHERE id=$3`, [status, reference, orderId]);
-}
-
-async function verifyPaystack(req, res) {
-  if (!config.paystackSecretKey) return res.status(503).json({ error: 'Payments are not configured' });
-  const order = await db.one('SELECT id, total, currency, payment_status FROM orders WHERE tracking_code=$1', [req.body.trackingCode]);
-  if (!order) return res.status(404).json({ error: 'Order not found' });
-  if (req.body.reference !== req.body.trackingCode) {
-    return res.status(400).json({ verified: false, error: 'Payment reference does not match this order' });
-  }
-  if (order.payment_status === 'paid') return res.json({ verified: true, message: 'Payment already verified' });
-  const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(req.body.reference)}`, {
-    headers: { Authorization: `Bearer ${config.paystackSecretKey}` }
-  });
-  if (!response.ok) return res.status(502).json({ error: 'Unable to verify payment with provider' });
-  const result = await response.json();
-  const payment = result.data;
-  const valid = result.status && payment && payment.status === 'success' &&
-    payment.reference === req.body.reference && payment.amount === order.total * 100 && payment.currency === order.currency;
-  if (!valid) return res.status(400).json({ verified: false, error: 'Payment details do not match this order' });
-  await updatePayment(order.id, req.body.reference, 'paid');
-  res.json({ verified: true });
-}
-
-async function paystackWebhook(req, res) {
-  if (!config.paystackSecretKey) return res.status(503).json({ error: 'Payments are not configured' });
-  const signature = req.get('x-paystack-signature') || '';
-  const expected = crypto.createHmac('sha512', config.paystackSecretKey).update(req.rawBody || Buffer.alloc(0)).digest('hex');
-  if (signature.length !== expected.length ||
-      !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
-    return res.status(401).json({ error: 'Invalid webhook signature' });
-  }
-  const event = req.body;
-  if (event.event === 'charge.success' && event.data && event.data.reference) {
-    const order = await db.one('SELECT id, total, currency FROM orders WHERE payment_reference=$1', [event.data.reference])
-      || await db.one('SELECT id, total, currency FROM orders WHERE tracking_code=$1', [event.data.metadata && event.data.metadata.trackingCode]);
-    if (order && event.data.amount === order.total * 100 && event.data.currency === order.currency) {
-      await updatePayment(order.id, event.data.reference, 'paid');
-    }
-  }
-  res.json({ received: true });
-}
-
-module.exports = { submitOrder, trackOrder, verifyPaystack, paystackWebhook };
+module.exports = { submitOrder, trackOrder };

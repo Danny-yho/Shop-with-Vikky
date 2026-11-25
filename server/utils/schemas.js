@@ -50,7 +50,7 @@ module.exports = {
     }, {
       message: 'Each product size and color combination may only appear once'
     }),
-    paymentMethod: z.enum(['paystack', 'whatsapp', 'bank']).default('bank')
+    paymentMethod: z.enum(['whatsapp', 'bank']).default('bank')
   }),
   contact: z.object({
     name: z.string().trim().min(2).max(120),
@@ -60,10 +60,6 @@ module.exports = {
   }),
   newsletter: z.object({ email: z.string().email().max(254) }),
   trackingCode: z.object({ trackingCode: z.string().regex(/^[A-F0-9]{18}$/) }),
-  paymentVerification: z.object({
-    trackingCode: z.string().regex(/^[A-F0-9]{18}$/),
-    reference: z.string().trim().min(5).max(200)
-  }),
   orderStatus: z.object({
     status: z.enum(['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'])
   }),
