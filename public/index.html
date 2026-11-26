@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded',async()=>{document.getElementById('
 const catOrder=catDefaults.map(d=>d[0].toLowerCase());
 const catFallback=Object.fromEntries(catDefaults.map(([n,u])=>[n.toLowerCase(),u]));
 const catLinks={footwear:'https://www.tiktok.com/@shopwithvikky12/video/7703251721035746568'};
+const catImageFallback={dresses:'/images/vikky-african-dress.jpg',tops:'/images/vikky-african-top.jpg',skirts:'/images/vikky-purple-skirt.jpg','two-piece sets':'/images/vikky-knit-set.jpg',jumpsuits:'/images/vikky-knit-set.jpg','bags & accessories':'/images/vikky-red-bag.jpg','ankara/native wear':'/images/vikky-native-set.jpg',footwear:'/images/vikky-platform-shoe.jpg'};
 let cats=[];
 try{const d=await api('/categories');cats=(d.categories||[]).map(c=>({name:c.name,imageUrl:c.imageUrl||''}))}catch{}
 if(!cats.length)cats=catDefaults.map(([n,u])=>({name:n,imageUrl:u}));
@@ -30,8 +31,19 @@ document.getElementById('categories').innerHTML=cats.map(c=>{
   const key=c.name.toLowerCase(),href=catLinks[key],external=Boolean(href);
   const url=href||'/shop.html?category='+encodeURIComponent(c.name);
   const image=optimizeImage(c.imageUrl||catFallback[key]||'/images/product-placeholder.svg');
-  return '<a class="category-card" href="'+url+'" '+(external?'target="_blank" rel="noopener noreferrer"':'')+'><img class="category-image" src="'+image+'" alt="" loading="lazy" decoding="async" data-image-fallback><strong>'+c.name+'</strong><span class="category-action" aria-hidden="true">'+(external?'View on TikTok':'Explore')+'</span></a>';
+  const imageFallback=catImageFallback[key]||'/images/product-placeholder.svg';
+  return '<a class="category-card" href="'+url+'" '+(external?'target="_blank" rel="noopener noreferrer"':'')+'><img class="category-image" src="'+image+'" alt="" loading="lazy" decoding="async" data-image-fallback data-fallback-src="'+imageFallback+'"><strong>'+c.name+'</strong><span class="category-action" aria-hidden="true">'+(external?'View on TikTok':'Explore')+'</span></a>';
 }).join('');
 const homeProductCard=p=>productCard(p);
-const ps=await loadProducts();document.getElementById('newArrivals').innerHTML=ps.filter(p=>p.newArrival).slice(0,4).map(homeProductCard).join('');document.getElementById('bestSellers').innerHTML=ps.filter(p=>p.bestSeller&&!p.newArrival).slice(0,4).map(homeProductCard).join('');document.getElementById('newsletter').addEventListener('submit',async e=>{e.preventDefault();const restore=setButtonLoading(e.target.querySelector('button'),'Subscribing…');try{await api('/newsletter',{method:'POST',body:JSON.stringify({email:e.target.email.value})});toast('Welcome to the Vikky list!');e.target.reset()}catch(err){toast(err.message)}finally{restore()}})});
+const ps=await loadProducts();
+const flaggedNew=ps.filter(p=>p.newArrival);
+const newOnes=(flaggedNew.length?flaggedNew:ps).slice(0,4);
+const newIds=new Set(newOnes.map(p=>p.id));
+let best=ps.filter(p=>p.bestSeller&&!newIds.has(p.id));
+if(!best.length)best=ps.filter(p=>p.bestSeller);
+if(!best.length)best=ps.filter(p=>p.featured);
+if(!best.length)best=ps;
+document.getElementById('newArrivals').innerHTML=newOnes.map(homeProductCard).join('')||'<p class="empty-results text-center">New arrivals are on the way.</p>';
+document.getElementById('bestSellers').innerHTML=best.slice(0,4).map(homeProductCard).join('')||'<p class="empty-results text-center">Best sellers are on the way.</p>';
+document.getElementById('newsletter').addEventListener('submit',async e=>{e.preventDefault();const restore=setButtonLoading(e.target.querySelector('button'),'Subscribing…');try{await api('/newsletter',{method:'POST',body:JSON.stringify({email:e.target.email.value})});toast('Welcome to the Vikky list!');e.target.reset()}catch(err){toast(err.message)}finally{restore()}})});
 </script></body></html>

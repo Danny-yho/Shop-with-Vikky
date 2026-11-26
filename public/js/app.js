@@ -122,6 +122,11 @@ function bindGlobal(){
   document.addEventListener('error',event=>{
     const image=event.target;
     if(image instanceof HTMLImageElement&&image.hasAttribute('data-image-fallback')&&!image.dataset.fallbackApplied){
+      if(image.dataset.fallbackSrc&&!image.dataset.fallbackStep){
+        image.dataset.fallbackStep='1';
+        image.src=image.dataset.fallbackSrc;
+        return;
+      }
       image.dataset.fallbackApplied='true';
       image.src='/images/product-placeholder.svg';
     }
