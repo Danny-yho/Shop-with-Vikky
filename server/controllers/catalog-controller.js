@@ -75,7 +75,7 @@ async function getProduct(req, res) {
 }
 
 async function listCategories(req, res) {
-  const categories = await db.many(`SELECT c.id, c.name, c.slug, c.description, COUNT(p.id)::int AS "productCount"
+  const categories = await db.many(`SELECT c.id, c.name, c.slug, c.description, c.image_url AS "imageUrl", COUNT(p.id)::int AS "productCount"
     FROM categories c LEFT JOIN products p ON p.category_id=c.id AND p.active=1
     GROUP BY c.id ORDER BY c.name`);
   res.json({ categories });

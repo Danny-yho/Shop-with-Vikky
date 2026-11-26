@@ -52,6 +52,19 @@ const products = [
     for (const row of categories) {
       await tx.query('INSERT INTO categories (name, slug, description) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', row);
     }
+    const categoryImages = [
+      ['dresses', '/images/tiktok-dress.avif'],
+      ['tops', '/images/tiktok-basic-top.avif'],
+      ['skirts', '/images/tiktok-yellow-look.avif'],
+      ['two-piece-sets', '/images/tiktok-two-piece.avif'],
+      ['jumpsuits', '/images/tiktok-palazzo.avif'],
+      ['bags-accessories', '/images/tiktok-shop-promo.avif'],
+      ['ankara-native-wear', '/images/tiktok-two-piece.avif'],
+      ['footwear', '/images/vikky-platform-shoe.jpg']
+    ];
+    for (const [slug, imageUrl] of categoryImages) {
+      await tx.query("UPDATE categories SET image_url=$1 WHERE slug=$2 AND (image_url IS NULL OR image_url='')", [imageUrl, slug]);
+    }
     const categoryId = async (name) => (await tx.one('SELECT id FROM categories WHERE LOWER(name) = LOWER($1)', [name])).id;
     const migrationKey = 'fashion_catalog_v1';
     const migrated = await tx.one('SELECT value FROM settings WHERE key=$1', [migrationKey]);

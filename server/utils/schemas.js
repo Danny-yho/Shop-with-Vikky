@@ -28,7 +28,8 @@ module.exports = {
   category: z.object({
     name: z.string().trim().min(2).max(100),
     slug,
-    description: z.string().max(1000).default('')
+    description: z.string().max(1000).default(''),
+    imageUrl: z.string().max(1000).default('')
   }),
   order: z.object({
     customer: z.object({

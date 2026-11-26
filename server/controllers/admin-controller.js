@@ -90,19 +90,25 @@ async function listCategories(req, res) {
 }
 
 async function createCategory(req, res) {
+  const imageUrl = req.body.imageUrl || '';
   const category = await db.one(
-    'INSERT INTO categories (name, slug, description) VALUES ($1, $2, $3) RETURNING *',
-    [req.body.name, req.body.slug, req.body.description]
+    'INSERT INTO categories (name, slug, description, image_url, image_public_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+    [req.body.name, req.body.slug, req.body.description, imageUrl, publicIdFromUrl(imageUrl)]
   );
   res.status(201).json({ category });
 }
 
 async function updateCategory(req, res) {
+  const existing = await db.one('SELECT * FROM categories WHERE id=$1', [req.params.id]);
+  if (!existing) return res.status(404).json({ error: 'Category not found' });
+  const imageUrl = req.body.imageUrl === undefined ? existing.image_url : req.body.imageUrl;
   const category = await db.one(
-    'UPDATE categories SET name=$1, slug=$2, description=$3 WHERE id=$4 RETURNING *',
-    [req.body.name, req.body.slug, req.body.description, req.params.id]
+    'UPDATE categories SET name=$1, slug=$2, description=$3, image_url=$4, image_public_id=$5 WHERE id=$6 RETURNING *',
+    [req.body.name, req.body.slug, req.body.description, imageUrl, publicIdFromUrl(imageUrl), existing.id]
   );
-  if (!category) return res.status(404).json({ error: 'Category not found' });
+  const previousPublicId = existing.image_public_id || publicIdFromUrl(existing.image_url);
+  const nextPublicId = publicIdFromUrl(imageUrl);
+  if (previousPublicId && previousPublicId !== nextPublicId) await destroyImage(previousPublicId);
   res.json({ category });
 }
 

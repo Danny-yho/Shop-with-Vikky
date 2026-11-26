@@ -4,7 +4,7 @@
 <body class="marble-page">
 <button class="theme-toggle admin-theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode"><svg class="theme-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.4A8.4 8.4 0 0 1 8.6 3.8 8.7 8.7 0 1 0 20.2 15.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="theme-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="visually-hidden">Toggle dark mode</span></button>
 <main id="loginView" class="section"><div class="container-main" style="max-width:480px"><div class="glass p-4"><img src="/images/logo-full.png" alt="Shop with Vikky" style="height:70px"><h1 class="h4 mt-3">Admin login</h1><form id="loginForm" class="mt-3"><label class="form-label">Email</label><input class="form-control mb-3" type="email" name="email" required><label class="form-label">Password</label><input class="form-control mb-3" type="password" name="password" required><button class="btn btn-glossy w-100">Sign in</button></form><div id="loginError" class="text-danger mt-3"></div></div></div></main>
-<main id="adminView" class="admin-shell d-none"><aside class="admin-sidebar"><img src="/images/logo-full.png" alt="" style="height:52px;width:100%;object-fit:contain"><nav class="mt-4"><a href="#" data-tab="dashboard">Dashboard</a><a href="#" data-tab="products">Products</a><a href="#" data-tab="orders">Orders</a><a href="#" data-tab="messages">Customers & Messages</a><a href="#" data-tab="settings">Settings</a><a href="#" id="logout">Logout</a></nav></aside><section class="admin-main"><div id="adminContent"></div></section></main>
+<main id="adminView" class="admin-shell d-none"><aside class="admin-sidebar"><img src="/images/logo-full.png" alt="" style="height:52px;width:100%;object-fit:contain"><nav class="mt-4"><a href="#" data-tab="dashboard">Dashboard</a><a href="#" data-tab="products">Products</a><a href="#" data-tab="categories">Categories</a><a href="#" data-tab="orders">Orders</a><a href="#" data-tab="messages">Customers & Messages</a><a href="#" data-tab="settings">Settings</a><a href="#" id="logout">Logout</a></nav></aside><section class="admin-main"><div id="adminContent"></div></section></main>
 <div id="productModal" class="admin-modal" hidden>
 <div class="admin-modal-backdrop" data-modal-close></div>
 <div class="admin-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
@@ -126,10 +126,43 @@ async function products(){
   renderTable();
  }catch(error){host.innerHTML=`<h1 class="h3">Products</h1><div class="alert alert-danger mt-3" role="alert">${escapeHtml(error.message)}</div>`}
 }
+async function manageCategories(){
+ const host=document.getElementById('adminContent');
+ try{
+  const data=await api('/api/admin/categories');
+  const list=data.categories||[];
+  const byId=Object.fromEntries(list.map(category=>[category.id,category]));
+  host.innerHTML=`<div><h1 class="h3 mb-1">Categories</h1><p class="text-muted mb-0">Update the images shown in the homepage "Shop by category" section.</p></div><div id="categoryNotice" class="mt-3" role="status" aria-live="polite"></div><div id="categoryHost" class="row g-3 mt-1">${list.map(category=>`<div class="col-md-6"><div class="glass p-3 h-100 d-flex flex-column gap-2"><div class="d-flex align-items-center gap-3"><img class="admin-category-thumb rounded" data-category-preview="${category.id}" src="${escapeHtml(mediaUrl(category.image_url)||'/images/product-placeholder.svg')}" alt=""><div><h2 class="h6 mb-0">${escapeHtml(category.name)}</h2><small class="text-muted">${escapeHtml(category.slug)}</small></div></div><label class="form-label small mb-0" for="categoryUrl${category.id}">Image URL</label><input id="categoryUrl${category.id}" class="form-control form-control-sm" data-category-url="${category.id}" value="${escapeHtml(category.image_url||'')}" placeholder="/images/... or https://..."><label class="form-label small mb-0" for="categoryFile${category.id}">Or upload a new image</label><input id="categoryFile${category.id}" class="form-control form-control-sm" type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-category-file="${category.id}"><div class="d-flex align-items-center gap-2"><button class="btn btn-sm btn-glossy" type="button" data-category-save="${category.id}">Save image</button><span class="small" role="status" data-category-status="${category.id}"></span></div></div></div>`).join('')}</div>`;
+  const notice=document.getElementById('categoryNotice'),listHost=document.getElementById('categoryHost');
+  listHost.addEventListener('change',async event=>{
+   const fileInput=event.target.closest('[data-category-file]');
+   if(fileInput){
+    const id=Number(fileInput.dataset.categoryFile),file=fileInput.files[0];if(!file)return;
+    const status=listHost.querySelector(`[data-category-status="${id}"]`),preview=listHost.querySelector(`[data-category-preview="${id}"]`),urlInput=listHost.querySelector(`[data-category-url="${id}"]`);
+    status.textContent='Uploading…';
+    const form=new FormData();form.append('image',file);
+    try{const result=await api('/api/admin/uploads',{method:'POST',body:form});urlInput.value=result.url;preview.src=result.url;status.textContent='Uploaded — click "Save image".'}
+    catch(error){status.textContent='';notice.textContent=error.message;notice.className='text-danger mt-3'}
+    return;
+   }
+   const urlInput=event.target.closest('[data-category-url]');
+   if(urlInput){const preview=listHost.querySelector(`[data-category-preview="${urlInput.dataset.categoryUrl}"]`);if(preview)preview.src=urlInput.value.trim()||'/images/product-placeholder.svg'}
+  });
+  listHost.addEventListener('click',async event=>{
+   const button=event.target.closest('[data-category-save]');if(!button)return;
+   const id=Number(button.dataset.categorySave),category=byId[id];if(!category)return;
+   const urlInput=listHost.querySelector(`[data-category-url="${id}"]`),status=listHost.querySelector(`[data-category-status="${id}"]`);
+   button.disabled=true;const label=button.textContent;button.textContent='Saving…';status.textContent='';
+   try{const result=await api(`/api/admin/categories/${id}`,{method:'PUT',body:JSON.stringify({name:category.name,slug:category.slug,description:category.description||'',imageUrl:urlInput.value.trim()})});byId[id]=result.category;status.textContent='Saved';notice.textContent='';notice.className='mt-3'}
+   catch(error){notice.textContent=error.message;notice.className='text-danger mt-3'}
+   finally{button.disabled=false;button.textContent=label}
+  });
+ }catch(error){host.innerHTML=`<h1 class="h3">Categories</h1><div class="alert alert-danger mt-3" role="alert">${escapeHtml(error.message)}</div>`}
+}
 async function orders(){const d=await api('/api/admin/orders');document.getElementById('adminContent').innerHTML=`<h1 class="h3">Orders</h1><div class="glass p-3 mt-3 table-responsive"><table class="table"><thead><tr><th>Number</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>${(d.orders||[]).map(o=>`<tr><td>${o.trackingCode}</td><td>${o.customerName}</td><td>₦${o.total.toLocaleString('en-NG')}</td><td><select class="form-select" data-status="${o.id}"><option ${o.status==='pending'?'selected':''}>pending</option><option ${o.status==='confirmed'?'selected':''}>confirmed</option><option ${o.status==='processing'?'selected':''}>processing</option><option ${o.status==='shipped'?'selected':''}>shipped</option><option ${o.status==='delivered'?'selected':''}>delivered</option><option ${o.status==='cancelled'?'selected':''}>cancelled</option></select></td></tr>`).join('')}</tbody></table></div>`;document.querySelectorAll('[data-status]').forEach(s=>s.onchange=()=>api(`/api/admin/orders/${s.dataset.status}`,{method:'PATCH',body:JSON.stringify({status:s.value})}))}
 async function messages(){const d=await api('/api/admin/messages');document.getElementById('adminContent').innerHTML=`<h1 class="h3">Customers & Messages</h1><div class="glass p-3 mt-3"><h2 class="h5">Contacts</h2>${(d.contacts||[]).map(m=>`<div class="border-bottom py-2"><strong>${m.name}</strong> — ${m.email}<p>${m.message}</p></div>`).join('')||'<p>No messages.</p>'}<h2 class="h5 mt-4">Subscribers</h2>${(d.subscribers||[]).map(s=>`<div>${s.email}</div>`).join('')||'<p>No subscribers.</p>'}</div>`}
 async function settings(){const d=await api('/api/admin/settings');document.getElementById('adminContent').innerHTML=`<h1 class="h3">Settings</h1><form id="settingsForm" class="glass p-4 mt-3">${(d.settings||[]).map(s=>`<label class="form-label text-capitalize">${s.key.replaceAll('_',' ')}</label><input class="form-control mb-3" name="${s.key}" value="${String(s.value).replaceAll('"','&quot;')}">`).join('')}<button class="btn btn-glossy">Save settings</button></form>`;document.getElementById('settingsForm').onsubmit=async e=>{e.preventDefault();await api('/api/admin/settings',{method:'PUT',body:JSON.stringify(Object.fromEntries(new FormData(e.target)))})}}
-const tabs={dashboard,products,orders,messages,settings};document.querySelectorAll('[data-tab]').forEach(a=>a.onclick=e=>{e.preventDefault();closeProductModal();tabs[a.dataset.tab]()});document.getElementById('logout').onclick=async e=>{e.preventDefault();await api('/api/auth/logout',{method:'POST'}).catch(()=>{});location.reload()};
+const tabs={dashboard,products,categories:manageCategories,orders,messages,settings};document.querySelectorAll('[data-tab]').forEach(a=>a.onclick=e=>{e.preventDefault();closeProductModal();tabs[a.dataset.tab]()});document.getElementById('logout').onclick=async e=>{e.preventDefault();await api('/api/auth/logout',{method:'POST'}).catch(()=>{});location.reload()};
 init();
 </script>
 </body>
