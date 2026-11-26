@@ -1,6 +1,6 @@
 const API = `${window.API_BASE || ''}/api`;
 const WHATSAPP = 'https://wa.me/2347030660694';
-const themeKey = 'swv-theme';
+const themeKey = 'swv_store_theme';
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
   document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
