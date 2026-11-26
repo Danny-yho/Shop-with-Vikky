@@ -96,12 +96,16 @@ function optimizeImage(url){
   if(firstSegment.indexOf('_')!==-1) return value;
   return value.replace('/upload/','/upload/f_auto,q_auto,w_800/');
 }
-function productCard(p){
+function productCard(p,index=0){
   const image=optimizeImage(mediaUrl((p.images&&p.images[0])||p.imageUrl)||'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=80');
   const imageAlt=p.imageAlt||p.name;
   const wishes=JSON.parse(localStorage.getItem(wishlistKey)||'[]');
   const badges=[p.newArrival?'<span class="badge-featured">New</span>':'',p.bestSeller?'<span class="badge-featured">Popular</span>':''].filter(Boolean).join('');
-  return `<article class="product-card glass reveal"><div class="product-badges">${badges}</div><button class="wishlist-btn" data-wish="${p.id}" aria-label="${wishes.includes(p.id)?'Remove':'Add'} ${p.name} ${wishes.includes(p.id)?'from':'to'} wishlist" aria-pressed="${wishes.includes(p.id)}">${wishes.includes(p.id)?'♥':'♡'}</button><a href="/product.html?id=${p.id}"><div class="image-wrap"><img src="${image}" alt="${imageAlt}" loading="lazy" decoding="async" data-image-fallback></div><div class="product-card-body"><h3 class="h6">${p.name}</h3><div class="price">${formatNGN(p.price)}</div>${p.stock>0&&p.stock<=5?'<small class="stock-note">Almost gone</small>':''}</div></a></article>`;
+  /* First row (visible without scrolling) loads eagerly so mobile Safari/Chrome fetch it immediately. */
+  const eager=index<4;
+  const loadingAttr=eager?'eager':'lazy';
+  const priorityAttr=eager?' fetchpriority="high"':'';
+  return `<article class="product-card glass reveal"><div class="product-badges">${badges}</div><button class="wishlist-btn" data-wish="${p.id}" aria-label="${wishes.includes(p.id)?'Remove':'Add'} ${p.name} ${wishes.includes(p.id)?'from':'to'} wishlist" aria-pressed="${wishes.includes(p.id)}">${wishes.includes(p.id)?'♥':'♡'}</button><a href="/product.html?id=${p.id}"><div class="image-wrap"><img src="${image}" alt="${imageAlt}" loading="${loadingAttr}"${priorityAttr} decoding="async" width="600" height="750" data-image-fallback data-fallback-src="/images/product-placeholder.svg"></div><div class="product-card-body"><h3 class="h6">${p.name}</h3><div class="price">${formatNGN(p.price)}</div>${p.stock>0&&p.stock<=5?'<small class="stock-note">Almost gone</small>':''}</div></a></article>`;
 }
 async function loadProducts(){
   const fetchCatalog=async()=>{const d=await api('/products?limit=50');return d.data||d.products||[]};

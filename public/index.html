@@ -34,7 +34,7 @@ document.getElementById('categories').innerHTML=cats.map(c=>{
   const imageFallback=catImageFallback[key]||'/images/product-placeholder.svg';
   return '<a class="category-card" href="'+url+'" '+(external?'target="_blank" rel="noopener noreferrer"':'')+'><img class="category-image" src="'+image+'" alt="" loading="lazy" decoding="async" data-image-fallback data-fallback-src="'+imageFallback+'"><strong>'+c.name+'</strong><span class="category-action" aria-hidden="true">'+(external?'View on TikTok':'Explore')+'</span></a>';
 }).join('');
-const homeProductCard=p=>productCard(p);
+const homeProductCard=(p,i)=>productCard(p,i);
 const ps=await loadProducts();
 const flaggedNew=ps.filter(p=>p.newArrival);
 const newOnes=(flaggedNew.length?flaggedNew:ps).slice(0,4);
