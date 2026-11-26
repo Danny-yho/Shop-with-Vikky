@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
     const cart=getCart(),key=`${p.id}-${size}-${color}`,item=cart.find(x=>x.key===key);
     if((item?.qty||0)+quantity>p.stock){toast('There is not enough stock for that quantity');return}
     if(!item)cart.push({key,id:p.id,name:p.name,price:p.price,image:imgs[0],size,color,qty:quantity});else item.qty+=quantity;
-    setCart(cart);toast('Added to your bag');
+    setCart(cart);updateCartCount(true);toast('Added to your bag');flashButtonConfirm(document.getElementById('addCart'),'✓ Added to Cart');
   };
   document.getElementById('waProduct').href=`${WHATSAPP}?text=${encodeURIComponent(`Hello Shop with Vikky, I have a question about ${p.name}`)}`;
   document.getElementById('related').innerHTML=all.filter(x=>x.id!==p.id&&x.category===p.category).concat(all.filter(x=>x.id!==p.id)).slice(0,4).map(productCard).join('');

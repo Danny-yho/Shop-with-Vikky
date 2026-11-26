@@ -109,9 +109,6 @@ html[data-theme="dark"] .alert-light { color:#F8F1FF; background:#3D2854; border
 html[data-theme="dark"] .wishlist-btn { color:#F8F1FF; background:#4A3063; }
 html[data-theme="dark"] .text-muted { color:#D2C0E2!important; }
 html[data-theme="dark"] .admin-shell { background:rgba(39,20,60,.78); }
-html[data-theme="dark"] .admin-sidebar { color:#F8F1FF; background:#351E4E; }
-html[data-theme="dark"] .admin-sidebar a { color:#E9DBF8; }
-html[data-theme="dark"] .admin-sidebar a:hover { color:#FFF; background:#5A3D78; }
 html[data-theme="dark"] .table {
   --bs-table-color:#F8F1FF;
   --bs-table-border-color:#72578D;
@@ -196,8 +193,7 @@ html[data-theme="dark"] .preloader img { filter:brightness(.85); }
 .gallery-main { height:520px; object-fit:cover; border-radius:20px; cursor:zoom-in; }
 .option-chip { border:1px solid var(--lavender-300); border-radius:999px; background:white; padding:.45rem .8rem; margin:.2rem; } .option-chip.active { background:var(--lavender-200); border-color:var(--purple-700); }
 .cart-row { display:grid; grid-template-columns:90px 1fr auto auto; gap:1rem; align-items:center; } .cart-row img { width:90px; height:110px; object-fit:cover; border-radius:12px; }
-.admin-shell { min-height:100vh; background:rgba(246,240,255,.58); } .admin-sidebar { background:var(--purple-950); color:white; min-height:100vh; position:fixed; width:240px; padding:1.25rem; } .admin-main { margin-left:240px; padding:1.5rem; }
-.admin-sidebar a { color:var(--lavender-100); display:block; padding:.7rem; border-radius:10px; } .admin-sidebar a:hover { background:var(--purple-900); color:white; }
+.admin-shell { min-height:100vh; background:rgba(246,240,255,.58); } .admin-main { padding:1.75rem 0 3rem; }
 .admin-theme-toggle { position:fixed; z-index:20; top:1rem; right:1rem; }
 .brand-wordmark { display:inline-grid; text-align:center; line-height:.82; font-family:'Archivo Black',sans-serif; text-transform:uppercase; }
 .brand-wordmark .shop { font-size:1.7rem; -webkit-text-stroke:1px white; color:var(--purple-900); } .brand-wordmark .with { font-family:'Kaushan Script'; font-size:.85rem; text-transform:none; }
@@ -217,7 +213,7 @@ html[data-theme="dark"] .preloader img { filter:brightness(.85); }
   .filter-search { flex-basis:100%; min-width:100%; }
   .filter-clear { align-self:stretch; }
   .cart-row { grid-template-columns:72px 1fr auto; } .cart-row .cart-total { grid-column:2/4; }
-  .gallery-main { height:420px; } .admin-sidebar { position:static; width:auto; min-height:auto; } .admin-main { margin-left:0; }
+  .gallery-main { height:420px; } .admin-main { padding:1.25rem 0 2.5rem; }
 }
 @media(max-width:480px){
   .category-grid { grid-template-columns:1fr 1fr; } .category-card { min-height:135px; } .product-grid { grid-template-columns:1fr 1fr; gap:.65rem; }
@@ -288,9 +284,6 @@ html[data-theme="dark"] .btn-glossy { color:#FFF!important; background:linear-gr
 html[data-theme="dark"] .btn-outline-brand { color:var(--theme-text)!important; background:var(--theme-surface-raised); border-color:var(--theme-accent); }
 html[data-theme="dark"] .btn-outline-danger { --bs-btn-color:var(--theme-danger); --bs-btn-border-color:var(--theme-danger); --bs-btn-hover-color:#21162E; --bs-btn-hover-bg:var(--theme-danger); --bs-btn-hover-border-color:var(--theme-danger); }
 html[data-theme="dark"] .admin-shell { color:var(--theme-text); background:var(--theme-bg); }
-html[data-theme="dark"] .admin-sidebar { color:var(--theme-text); background:#291A37; border-color:var(--theme-border); }
-html[data-theme="dark"] .admin-sidebar a { color:var(--theme-text); }
-html[data-theme="dark"] .admin-sidebar a:hover { color:#FFF; background:var(--theme-surface-raised); }
 html[data-theme="dark"] .table {
   --bs-table-color:var(--theme-text);
   --bs-table-bg:transparent;
@@ -345,3 +338,39 @@ html[data-theme="dark"] .badge-featured,
 html[data-theme="dark"] .back-to-top { color:var(--theme-text); background:#5A3D78; }
 html[data-theme="dark"] .toast-brand { color:var(--theme-text); background:var(--theme-surface); border-color:var(--theme-border); }
 html[data-theme="dark"] .preloader { background:var(--theme-bg); }
+
+/* Immediate interactive feedback: hover, press, and disabled states on every button */
+button, .btn, [role="button"], input[type="submit"], input[type="button"], input[type="reset"] {
+  transition:transform .15s ease, box-shadow .22s ease, background-color .22s ease,
+    color .22s ease, border-color .22s ease, opacity .22s ease;
+}
+button:not([disabled]), .btn:not(.disabled):not([disabled]),
+[role="button"]:not([aria-disabled="true"]), input[type="submit"]:not([disabled]) { cursor:pointer; }
+button:not([disabled]):active, .btn:not(.disabled):not([disabled]):active,
+[role="button"]:not([aria-disabled="true"]):active, input[type="submit"]:not([disabled]):active { transform:scale(.97); }
+button[disabled], button.disabled, .btn.disabled, .btn[disabled],
+[role="button"][aria-disabled="true"], input[type="submit"][disabled] { cursor:not-allowed; opacity:.6; }
+.admin-logout { padding:.55rem 1.1rem; font-size:.82rem; }
+
+/* In-flight spinner shown inside buttons while a request is pending */
+.btn-spinner { display:inline-block; width:.95em; height:.95em; margin-right:.45rem; vertical-align:-.14em;
+  border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:swv-spin .65s linear infinite; }
+@keyframes swv-spin { to { transform:rotate(360deg); } }
+
+/* Header cart/wishlist badge counter pop */
+.cart-count.pulse, .wishlist-count.pulse, .wishlist-indicator.pulse { animation:swv-badge-pop .5s ease; }
+@keyframes swv-badge-pop { 0%{transform:scale(1)} 35%{transform:scale(1.55)} 70%{transform:scale(.92)} 100%{transform:scale(1)} }
+.wishlist-indicator { cursor:default; }
+.wishlist-indicator .wishlist-count { display:inline-grid; place-items:center; min-width:20px; height:20px; border-radius:50%;
+  background:var(--purple-700); color:white; font-size:.72rem; margin-left:.2rem; }
+html[data-theme="dark"] .wishlist-indicator .wishlist-count { color:var(--theme-text); background:#5A3D78; }
+
+/* Branded toast: stays visible regardless of Bootstrap's .show requirement */
+.toast-wrap .toast { display:flex; align-items:center; gap:.5rem; min-width:220px; animation:swv-toast-in .3s ease; }
+@keyframes swv-toast-in { from{opacity:0; transform:translateY(12px) scale(.98)} to{opacity:1; transform:none} }
+
+@media (prefers-reduced-motion:reduce){
+  .btn-spinner { animation-duration:1.6s; }
+  .cart-count.pulse, .wishlist-count.pulse, .wishlist-indicator.pulse { animation:none; }
+  .toast-wrap .toast { animation:none; }
+}

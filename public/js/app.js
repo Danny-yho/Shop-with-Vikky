@@ -50,7 +50,12 @@ const formatNGN=n=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN
 async function api(path,options={}) { const r=await fetch(API+path,{headers:{'Content-Type':'application/json'},credentials:'include',...options}); if(!r.ok) throw new Error((await r.json().catch(()=>({}))).message||'Request failed'); return r.json(); }
 function getCart(){try{return JSON.parse(localStorage.getItem(cartKey)||'[]')}catch{return[]}}
 function setCart(cart){localStorage.setItem(cartKey,JSON.stringify(cart)); updateCartCount()}
-function updateCartCount(){document.querySelectorAll('.cart-count').forEach(e=>e.textContent=getCart().reduce((n,i)=>n+i.qty,0))}
+function getWishlist(){try{return JSON.parse(localStorage.getItem(wishlistKey)||'[]')}catch{return[]}}
+function pulseBadges(selector){document.querySelectorAll(selector).forEach(badge=>{badge.classList.remove('pulse');void badge.offsetWidth;badge.classList.add('pulse')})}
+function updateCartCount(withPulse){document.querySelectorAll('.cart-count').forEach(e=>e.textContent=getCart().reduce((n,i)=>n+i.qty,0));if(withPulse)pulseBadges('.cart-count')}
+function updateWishlistCount(withPulse){const total=getWishlist().length;document.querySelectorAll('.wishlist-count').forEach(e=>e.textContent=total);if(withPulse)pulseBadges('.wishlist-count')}
+function setButtonLoading(button,text){if(!button||button.dataset.loading==='1')return()=>{};const original=button.innerHTML;button.dataset.loading='1';button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML='<span class="btn-spinner" aria-hidden="true"></span>'+text;return()=>{delete button.dataset.loading;button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original}}
+function flashButtonConfirm(button,text,ms=900){if(!button||button.dataset.flashing==='1')return;const original=button.innerHTML;button.dataset.flashing='1';button.disabled=true;button.innerHTML=text;setTimeout(()=>{delete button.dataset.flashing;button.disabled=false;button.innerHTML=original},ms)}
 function toast(message){const w=document.querySelector('.toast-wrap')||document.body.appendChild(Object.assign(document.createElement('div'),{className:'toast-wrap'})); w.innerHTML=`<div class="toast toast-brand shadow rounded-3 p-3">${message}</div>`; setTimeout(()=>w.innerHTML='',2600)}
 function ribbon(side){return `<svg class="corner-ribbon ${side}" viewBox="0 0 220 220" aria-hidden="true"><path d="M0 100C80 60 110 20 220 0v38C120 58 72 100 0 165z" fill="#3B0B73"/><path d="M0 116C72 75 112 42 220 18v10C120 52 74 86 0 130z" fill="#B99AF0"/></svg>`}
 function headerFooter(){
@@ -62,7 +67,7 @@ function headerFooter(){
       <div class="navbar-tools"><button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode"><svg class="theme-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.4A8.4 8.4 0 0 1 8.6 3.8 8.7 8.7 0 1 0 20.2 15.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="theme-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="visually-hidden">Toggle dark mode</span></button><button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button></div>
       <div class="collapse navbar-collapse" id="mainNav"><ul class="navbar-nav ms-auto align-items-lg-center">
       <li class="nav-item"><a class="nav-link" href="/shop.html">Shop</a></li><li class="nav-item"><a class="nav-link" href="/about.html">About</a></li><li class="nav-item"><a class="nav-link" href="/contact.html">Contact</a></li>
-      <li class="nav-item"><a class="nav-link" href="/faq.html">FAQ</a></li><li class="nav-item"><a class="nav-link" href="/cart.html">Cart <span class="cart-count">0</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="/faq.html">FAQ</a></li><li class="nav-item"><a class="nav-link" href="/cart.html">Cart <span class="cart-count">0</span></a></li><li class="nav-item"><span class="nav-link wishlist-indicator" title="Items saved to your wishlist">Wishlist <span class="wishlist-count">0</span></span></li>
       <li class="nav-item ms-lg-2"><a class="nav-social nav-social-whatsapp" href="${WHATSAPP}" target="_blank" rel="noopener" aria-label="Chat with Shop with Vikky on WhatsApp">WhatsApp <span aria-hidden="true">→</span></a></li>
       <li class="nav-item ms-lg-1"><a class="nav-social nav-social-tiktok" href="https://www.tiktok.com/@shopwithvikky12" target="_blank" rel="noopener" aria-label="Follow Shop with Vikky on TikTok">TikTok <span aria-hidden="true">♪</span></a></li></ul></div>
     </div></nav>`);
@@ -96,6 +101,7 @@ function bindGlobal(){
     if (event.key === themeKey) setTheme(event.newValue === 'dark' ? 'dark' : 'light');
   });
   updateCartCount();
+  updateWishlistCount();
   document.addEventListener('error',event=>{
     const image=event.target;
     if(image instanceof HTMLImageElement&&image.hasAttribute('data-image-fallback')&&!image.dataset.fallbackApplied){
@@ -107,7 +113,7 @@ function bindGlobal(){
   document.querySelector('.back-to-top')?.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}));
   document.addEventListener('click',e=>{
     const wish=e.target.closest('[data-wish]');
-    if(wish){const id=Number(wish.dataset.wish);let w=JSON.parse(localStorage.getItem(wishlistKey)||'[]');w=w.includes(id)?w.filter(x=>x!==id):[...w,id];localStorage.setItem(wishlistKey,JSON.stringify(w));wish.textContent=w.includes(id)?'♥':'♡';wish.setAttribute('aria-pressed',String(w.includes(id)));toast(w.includes(id)?'Saved to wishlist':'Removed from wishlist')}
+    if(wish){const id=Number(wish.dataset.wish),current=getWishlist(),adding=!current.includes(id),w=adding?[...current,id]:current.filter(x=>x!==id);localStorage.setItem(wishlistKey,JSON.stringify(w));wish.textContent=adding?'♥':'♡';wish.setAttribute('aria-pressed',String(adding));updateWishlistCount(true);toast(adding?'Saved to wishlist':'Removed from wishlist');flashButtonConfirm(wish,adding?'✓ Saved':'✓ Removed')}
   });
   if ('IntersectionObserver' in window) {
     const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{

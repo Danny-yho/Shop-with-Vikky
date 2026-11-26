@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
     if(!e.target.reportValidity())return;
     const fd=new FormData(e.target),items=cart.map(x=>({productId:x.id,quantity:x.qty,size:x.size,color:x.color}));
     const body={customer:{fullName:fd.get('fullName'),phone:fd.get('phone'),email:fd.get('email'),address:fd.get('address'),state:fd.get('state'),notes:fd.get('notes')},items,paymentMethod:fd.get('payment')};
-    const button=e.target.querySelector('[type="submit"]');button.disabled=true;button.textContent='Placing your order…';
+    const button=e.target.querySelector('[type="submit"]'),restore=setButtonLoading(button,'Placing your order…');
     try{
       const res=await api('/orders',{method:'POST',body:JSON.stringify(body)});
       if(body.paymentMethod==='whatsapp'){
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
         setCart([]);location.href=`/success.html?order=${res.order.orderNumber}&method=bank`;
       }
     }catch(error){toast(error.message)}
-    finally{button.disabled=false;button.textContent='Place my order'}
+    finally{restore()}
   };
 });
 </script></body></html>

@@ -2,9 +2,8 @@
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin | Shop with Vikky</title><meta name="theme-color" content="#3B0B73"><link rel="icon" href="/images/logo-icon.svg"><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><script>try{document.documentElement.dataset.theme=localStorage.getItem('swv_admin_theme')==='dark'?'dark':'light'}catch(e){}</script><link rel="stylesheet" href="/css/styles.css"></head>
 <body class="marble-page">
-<button class="theme-toggle admin-theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode"><svg class="theme-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.4A8.4 8.4 0 0 1 8.6 3.8 8.7 8.7 0 1 0 20.2 15.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="theme-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="visually-hidden">Toggle dark mode</span></button>
-<main id="loginView" class="section"><div class="container-main" style="max-width:480px"><div class="glass p-4"><img src="/images/logo-full.png" alt="Shop with Vikky" style="height:70px"><h1 class="h4 mt-3">Admin login</h1><form id="loginForm" class="mt-3"><label class="form-label">Email</label><input class="form-control mb-3" type="email" name="email" required><label class="form-label">Password</label><input class="form-control mb-3" type="password" name="password" required><button class="btn btn-glossy w-100">Sign in</button></form><div id="loginError" class="text-danger mt-3"></div></div></div></main>
-<main id="adminView" class="admin-shell d-none"><aside class="admin-sidebar"><img src="/images/logo-full.png" alt="" style="height:52px;width:100%;object-fit:contain"><nav class="mt-4"><a href="#" data-tab="dashboard">Dashboard</a><a href="#" data-tab="products">Products</a><a href="#" data-tab="categories">Categories</a><a href="#" data-tab="orders">Orders</a><a href="#" data-tab="messages">Customers & Messages</a><a href="#" data-tab="settings">Settings</a><a href="#" id="logout">Logout</a></nav></aside><section class="admin-main"><div id="adminContent"></div></section></main>
+<main id="loginView" class="section"><button class="theme-toggle admin-theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode"><svg class="theme-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.4A8.4 8.4 0 0 1 8.6 3.8 8.7 8.7 0 1 0 20.2 15.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="theme-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="visually-hidden">Toggle dark mode</span></button><div class="container-main" style="max-width:480px"><div class="glass p-4"><img src="/images/logo-full.png" alt="Shop with Vikky" style="height:70px"><h1 class="h4 mt-3">Admin login</h1><form id="loginForm" class="mt-3"><label class="form-label">Email</label><input class="form-control mb-3" type="email" name="email" required><label class="form-label">Password</label><input class="form-control mb-3" type="password" name="password" required><button class="btn btn-glossy w-100">Sign in</button></form><div id="loginError" class="text-danger mt-3"></div></div></div></main>
+<div id="adminView" class="admin-shell d-none"><nav class="navbar navbar-expand-lg sticky-top" aria-label="Admin navigation"><div class="container"><div class="navbar-brand-wrap"><a class="navbar-brand" href="#" id="adminHome" aria-label="Go to the admin dashboard" title="Go to the admin dashboard"><img src="/images/logo-full.png" alt="Shop with Vikky"></a><span class="navbar-brand-hint">Admin dashboard</span></div><div class="navbar-tools"><button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode"><svg class="theme-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.4A8.4 8.4 0 0 1 8.6 3.8 8.7 8.7 0 1 0 20.2 15.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="theme-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="visually-hidden">Toggle dark mode</span></button><button class="btn btn-glossy admin-logout" type="button" id="logout">Logout</button><button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav" aria-controls="adminNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button></div><div class="collapse navbar-collapse" id="adminNav"><ul class="navbar-nav ms-auto align-items-lg-center"><li class="nav-item"><a class="nav-link" href="#" data-tab="dashboard">Dashboard</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="products">Products</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="categories">Categories</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="orders">Orders</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="messages">Customers &amp; Messages</a></li><li class="nav-item"><a class="nav-link" href="#" data-tab="settings">Settings</a></li></ul></div></div></nav><main class="admin-main"><div id="adminContent" class="container-main"></div></main></div>
 <div id="productModal" class="admin-modal" hidden>
 <div class="admin-modal-backdrop" data-modal-close></div>
 <div class="admin-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
@@ -12,6 +11,7 @@
 <div id="productModalBody" class="admin-modal-body"></div>
 </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 <script src="/js/config.js"></script>
 <script>
 const themeKey='swv_admin_theme';
@@ -24,9 +24,11 @@ window.addEventListener('storage',event=>{if(event.key===themeKey)setTheme(event
 let csrf='';
 function mediaUrl(url){if(!url)return '';return /^https?:\/\//i.test(url)?url:url}
 async function api(path,options={}){const headers={...(options.body instanceof FormData?{}:{'Content-Type':'application/json'}),...(csrf?{'x-csrf-token':csrf}:{})};const r=await fetch((window.API_BASE||'')+path,{credentials:'include',...options,headers:{...headers,...options.headers}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Request failed');return d}
+function setButtonLoading(button,text){if(!button||button.dataset.loading==='1')return()=>{};const original=button.innerHTML;button.dataset.loading='1';button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML='<span class="btn-spinner" aria-hidden="true"></span>'+text;return()=>{delete button.dataset.loading;button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original}}
+function toast(message){const w=document.querySelector('.toast-wrap')||document.body.appendChild(Object.assign(document.createElement('div'),{className:'toast-wrap'}));w.innerHTML=`<div class="toast toast-brand shadow rounded-3 p-3" role="status">${message}</div>`;setTimeout(()=>w.innerHTML='',2600)}
 async function init(){try{const c=await api('/api/auth/csrf');csrf=c.csrfToken;await api('/api/auth/me');showAdmin()}catch{document.getElementById('loginView').classList.remove('d-none')}}
-document.getElementById('loginForm').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target);try{await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:fd.get('email'),password:fd.get('password')})});showAdmin()}catch(err){document.getElementById('loginError').textContent=err.message}};
-async function showAdmin(){document.getElementById('loginView').classList.add('d-none');document.getElementById('adminView').classList.remove('d-none');dashboard()}
+document.getElementById('loginForm').onsubmit=async e=>{e.preventDefault();const restore=setButtonLoading(e.target.querySelector('button[type="submit"],button:not([type])'),'Signing in…');const fd=new FormData(e.target);document.getElementById('loginError').textContent='';try{await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:fd.get('email'),password:fd.get('password')})});showAdmin()}catch(err){document.getElementById('loginError').textContent=err.message;restore()}};
+async function showAdmin(){document.getElementById('loginView').classList.add('d-none');document.getElementById('adminView').classList.remove('d-none');const first=document.querySelector('[data-tab]');if(first)first.setAttribute('aria-current','page');dashboard()}
 async function dashboard(){const [p,o]=await Promise.all([api('/api/admin/products'),api('/api/admin/orders')]);const orders=o.orders||[],pending=orders.filter(x=>x.status==='pending').length,revenue=orders.filter(x=>x.paymentStatus==='paid').reduce((n,x)=>n+x.total,0);document.getElementById('adminContent').innerHTML=`<h1 class="h3">Dashboard</h1><div class="row g-3 mt-2">${[[orders.length,'Orders'],[revenue,'Revenue'],[pending,'Pending'],[(p.products||[]).filter(x=>x.stock<=5).length,'Low stock']].map(x=>`<div class="col-md-3"><div class="glass p-3"><small>${x[1]}</small><h2>${typeof x[0]==='number'&&x[1]==='Revenue'?'₦'+x[0].toLocaleString('en-NG'):x[0]}</h2></div></div>`).join('')}</div>`}
 function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
 function slugify(value){return String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
@@ -79,9 +81,9 @@ async function products(){
     event.preventDefault();errorHost.textContent='';
     const splitList=value=>value.split(',').map(item=>item.trim()).filter(Boolean);
     const payload={categoryId:document.getElementById('productCategory').value?Number(document.getElementById('productCategory').value):null,name:nameInput.value.trim(),slug:slugInput.value.trim(),description:document.getElementById('productDescription').value.trim(),price:Number(document.getElementById('productPrice').value),compareAtPrice:document.getElementById('productComparePrice').value===''?null:Number(document.getElementById('productComparePrice').value),imageUrl:imageInput.value.trim(),sizes:splitList(document.getElementById('productSizes').value),colors:splitList(document.getElementById('productColors').value),stock:Number(document.getElementById('productStock').value),active:document.getElementById('productActive').checked,featured:document.getElementById('productFeatured').checked,newArrival:document.getElementById('productNewArrival').checked,bestSeller:document.getElementById('productBestSeller').checked};
-    const saveButton=document.getElementById('saveProduct');saveButton.disabled=true;saveButton.textContent='Saving…';
+    const saveButton=document.getElementById('saveProduct'),restoreSave=setButtonLoading(saveButton,'Saving…');
     try{await api(editing?`/api/admin/products/${product.id}`:'/api/admin/products',{method:editing?'PUT':'POST',body:JSON.stringify(payload)});closeProductModal();await products()}
-    catch(error){errorHost.textContent=error.message;saveButton.disabled=false;saveButton.textContent=editing?'Save changes':'Create product'}
+    catch(error){errorHost.textContent=error.message;restoreSave()}
    });
    nameInput.focus();
   };
@@ -97,11 +99,11 @@ async function products(){
     product.active=!product.active;
     renderTable();
     const rowToggle=tableHost.querySelector(`[data-toggle-product="${product.id}"]`);
-    if(rowToggle){rowToggle.disabled=true;rowToggle.textContent='Updating…'}
+    let restoreToggle=()=>{};if(rowToggle){restoreToggle=setButtonLoading(rowToggle,'Updating…')}
     try{
      await api(`/api/admin/products/${product.id}`,{method:'PUT',body:JSON.stringify({...productPayload(product),active:product.active})});
      notice.textContent='';notice.className='mt-3';
-     if(rowToggle){rowToggle.disabled=false;rowToggle.textContent=product.active?'Hide':'Activate'}
+     if(rowToggle){restoreToggle()}
     }catch(error){
      product.active=originalActive;
      renderTable();
@@ -111,14 +113,14 @@ async function products(){
    }
    if(button.hasAttribute('data-delete-product')){
     if(!confirm(`Permanently delete "${product.name}"? This cannot be undone. To temporarily remove it from the shop, choose Hide instead.`))return;
-    button.disabled=true;button.textContent='Deleting…';
+    const restoreDelete=setButtonLoading(button,'Deleting…');
     try{
      await api(`/api/admin/products/${product.id}`,{method:'DELETE'});
      const index=allProducts.indexOf(product);if(index>-1)allProducts.splice(index,1);
      renderTable();
      notice.textContent='';notice.className='mt-3';
     }catch(error){
-     button.disabled=false;button.textContent='Delete';
+     restoreDelete();
      notice.textContent=error.message;notice.className='text-danger mt-3'
     }
    }
@@ -151,9 +153,9 @@ async function manageCategories(){
    const button=event.currentTarget,status=document.getElementById('categoryCreateStatus');
    const payload={name:document.getElementById('newCategoryName').value.trim(),slug:document.getElementById('newCategorySlug').value.trim(),description:document.getElementById('newCategoryDescription').value.trim(),imageUrl:document.getElementById('newCategoryImageUrl').value.trim()};
    if(!payload.name||!payload.slug){status.textContent='Name and slug are required.';return}
-   button.disabled=true;const label=button.textContent;button.textContent='Creating…';status.textContent='';
+   const restoreCreate=setButtonLoading(button,'Creating…');status.textContent='';
    try{await api('/api/admin/categories',{method:'POST',body:JSON.stringify(payload)});await manageCategories()}
-   catch(error){status.textContent=error.message;button.disabled=false;button.textContent=label}
+   catch(error){status.textContent=error.message;restoreCreate()}
   });
   listHost.addEventListener('input',event=>{const urlInput=event.target.closest('[data-category-url]');if(urlInput){const preview=listHost.querySelector(`[data-category-preview="${urlInput.dataset.categoryUrl}"]`);if(preview)preview.src=urlInput.value.trim()||'/images/product-placeholder.svg'}});
   listHost.addEventListener('change',async event=>{
@@ -171,27 +173,28 @@ async function manageCategories(){
     const status=listHost.querySelector(`[data-category-status="${id}"]`);
     const payload={name:listHost.querySelector(`[data-category-name="${id}"]`).value.trim(),slug:category.slug,description:listHost.querySelector(`[data-category-description="${id}"]`).value.trim(),imageUrl:listHost.querySelector(`[data-category-url="${id}"]`).value.trim()};
     if(!payload.name){status.textContent='Name is required.';return}
-    saveButton.disabled=true;const label=saveButton.textContent;saveButton.textContent='Saving…';status.textContent='';
+    const restoreCardSave=setButtonLoading(saveButton,'Saving…');status.textContent='';
     try{const result=await api(`/api/admin/categories/${id}`,{method:'PUT',body:JSON.stringify(payload)});byId[id]=result.category;const title=listHost.querySelector(`[data-category-title="${id}"]`);if(title)title.textContent=result.category.name;status.textContent='Saved';showNotice('',false)}
     catch(error){showNotice(error.message,true)}
-    finally{saveButton.disabled=false;saveButton.textContent=label}
+    finally{restoreCardSave()}
     return;
    }
    const deleteButton=event.target.closest('[data-category-delete]');
    if(deleteButton){
     const id=Number(deleteButton.dataset.categoryDelete),category=byId[id];if(!category)return;
     if(!confirm(`Delete the "${category.name}" category? Products in it become uncategorised. This cannot be undone.`))return;
-    deleteButton.disabled=true;const label=deleteButton.textContent;deleteButton.textContent='Deleting…';
+    const restoreCardDelete=setButtonLoading(deleteButton,'Deleting…');
     try{await api(`/api/admin/categories/${id}`,{method:'DELETE'});delete byId[id];listHost.querySelector(`[data-category-card="${id}"]`)?.remove();showNotice('',false)}
-    catch(error){deleteButton.disabled=false;deleteButton.textContent=label;showNotice(error.message,true)}
+    catch(error){restoreCardDelete();showNotice(error.message,true)}
    }
   });
  }catch(error){host.innerHTML=`<h1 class="h3">Categories</h1><div class="alert alert-danger mt-3" role="alert">${escapeHtml(error.message)}</div>`}
 }
-async function orders(){const d=await api('/api/admin/orders');document.getElementById('adminContent').innerHTML=`<h1 class="h3">Orders</h1><div class="glass p-3 mt-3 table-responsive"><table class="table"><thead><tr><th>Number</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>${(d.orders||[]).map(o=>`<tr><td>${o.trackingCode}</td><td>${o.customerName}</td><td>₦${o.total.toLocaleString('en-NG')}</td><td><select class="form-select" data-status="${o.id}"><option ${o.status==='pending'?'selected':''}>pending</option><option ${o.status==='confirmed'?'selected':''}>confirmed</option><option ${o.status==='processing'?'selected':''}>processing</option><option ${o.status==='shipped'?'selected':''}>shipped</option><option ${o.status==='delivered'?'selected':''}>delivered</option><option ${o.status==='cancelled'?'selected':''}>cancelled</option></select></td></tr>`).join('')}</tbody></table></div>`;document.querySelectorAll('[data-status]').forEach(s=>s.onchange=()=>api(`/api/admin/orders/${s.dataset.status}`,{method:'PATCH',body:JSON.stringify({status:s.value})}))}
+async function orders(){const d=await api('/api/admin/orders');document.getElementById('adminContent').innerHTML=`<h1 class="h3">Orders</h1><div class="glass p-3 mt-3 table-responsive"><table class="table"><thead><tr><th>Number</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>${(d.orders||[]).map(o=>`<tr><td>${o.trackingCode}</td><td>${o.customerName}</td><td>₦${o.total.toLocaleString('en-NG')}</td><td><select class="form-select" data-status="${o.id}" aria-label="Update order status"><option ${o.status==='pending'?'selected':''}>pending</option><option ${o.status==='confirmed'?'selected':''}>confirmed</option><option ${o.status==='processing'?'selected':''}>processing</option><option ${o.status==='shipped'?'selected':''}>shipped</option><option ${o.status==='delivered'?'selected':''}>delivered</option><option ${o.status==='cancelled'?'selected':''}>cancelled</option></select></td></tr>`).join('')}</tbody></table></div>`;document.querySelectorAll('[data-status]').forEach(s=>s.onchange=async()=>{const previous=s.dataset.previous||s.value;s.disabled=true;s.setAttribute('aria-busy','true');try{await api(`/api/admin/orders/${s.dataset.status}`,{method:'PATCH',body:JSON.stringify({status:s.value})});s.dataset.previous=s.value}catch(error){s.value=previous;toast(error.message)}finally{s.disabled=false;s.removeAttribute('aria-busy')}})}
 async function messages(){const d=await api('/api/admin/messages');document.getElementById('adminContent').innerHTML=`<h1 class="h3">Customers & Messages</h1><div class="glass p-3 mt-3"><h2 class="h5">Contacts</h2>${(d.contacts||[]).map(m=>`<div class="border-bottom py-2"><strong>${m.name}</strong> — ${m.email}<p>${m.message}</p></div>`).join('')||'<p>No messages.</p>'}<h2 class="h5 mt-4">Subscribers</h2>${(d.subscribers||[]).map(s=>`<div>${s.email}</div>`).join('')||'<p>No subscribers.</p>'}</div>`}
-async function settings(){const d=await api('/api/admin/settings');document.getElementById('adminContent').innerHTML=`<h1 class="h3">Settings</h1><form id="settingsForm" class="glass p-4 mt-3">${(d.settings||[]).map(s=>`<label class="form-label text-capitalize">${s.key.replaceAll('_',' ')}</label><input class="form-control mb-3" name="${s.key}" value="${String(s.value).replaceAll('"','&quot;')}">`).join('')}<button class="btn btn-glossy">Save settings</button></form>`;document.getElementById('settingsForm').onsubmit=async e=>{e.preventDefault();await api('/api/admin/settings',{method:'PUT',body:JSON.stringify(Object.fromEntries(new FormData(e.target)))})}}
-const tabs={dashboard,products,categories:manageCategories,orders,messages,settings};document.querySelectorAll('[data-tab]').forEach(a=>a.onclick=e=>{e.preventDefault();closeProductModal();tabs[a.dataset.tab]()});document.getElementById('logout').onclick=async e=>{e.preventDefault();await api('/api/auth/logout',{method:'POST'}).catch(()=>{});location.reload()};
+async function settings(){const d=await api('/api/admin/settings');document.getElementById('adminContent').innerHTML=`<h1 class="h3">Settings</h1><form id="settingsForm" class="glass p-4 mt-3">${(d.settings||[]).map(s=>`<label class="form-label text-capitalize">${s.key.replaceAll('_',' ')}</label><input class="form-control mb-3" name="${s.key}" value="${String(s.value).replaceAll('"','&quot;')}">`).join('')}<button class="btn btn-glossy" type="submit">Save settings</button></form>`;document.getElementById('settingsForm').onsubmit=async e=>{e.preventDefault();const restore=setButtonLoading(e.target.querySelector('button[type="submit"]'),'Saving…');try{await api('/api/admin/settings',{method:'PUT',body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});toast('Settings saved')}catch(error){toast(error.message)}finally{restore()}}}
+const tabs={dashboard,products,categories:manageCategories,orders,messages,settings};document.querySelectorAll('[data-tab]').forEach(a=>a.onclick=e=>{e.preventDefault();closeProductModal();document.querySelectorAll('[data-tab]').forEach(link=>link.removeAttribute('aria-current'));a.setAttribute('aria-current','page');const collapse=document.getElementById('adminNav');if(collapse&&collapse.classList.contains('show')){const instance=bootstrap.Collapse.getOrCreateInstance(collapse);instance.hide()}tabs[a.dataset.tab]()});document.getElementById('logout').onclick=async e=>{e.preventDefault();await api('/api/auth/logout',{method:'POST'}).catch(()=>{});location.reload()};
+document.getElementById('adminHome').onclick=e=>{e.preventDefault();document.querySelectorAll('[data-tab]').forEach(link=>link.removeAttribute('aria-current'));const dashboardLink=document.querySelector('[data-tab="dashboard"]');if(dashboardLink)dashboardLink.setAttribute('aria-current','page');dashboard()};
 init();
 </script>
 </body>
