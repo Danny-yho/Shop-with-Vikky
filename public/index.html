@@ -17,15 +17,20 @@ document.addEventListener('DOMContentLoaded',async()=>{document.getElementById('
 ['Jumpsuits','/images/tiktok-palazzo.avif'],
 ['Bags & Accessories','/images/tiktok-shop-promo.avif'],
 ['Ankara/Native Wear','/images/tiktok-two-piece.avif'],
-['Footwear','/images/vikky-platform-shoe.jpg','https://www.tiktok.com/@shopwithvikky12/video/7703251721035746568']
+['Footwear','/images/vikky-platform-shoe.jpg']
 ];
-const categoryImages={};
-try{const d=await api('/categories');(d.categories||[]).forEach(c=>{if(c.imageUrl)categoryImages[String(c.name).toLowerCase()]=c.imageUrl})}catch{}
-document.getElementById('categories').innerHTML=catDefaults.map(([n,u,href])=>{
-  const external=Boolean(href);
-  const url=href||'/shop.html?category='+encodeURIComponent(n);
-  const image=categoryImages[n.toLowerCase()]||u||'/images/product-placeholder.svg';
-  return '<a class="category-card" href="'+url+'" '+(external?'target="_blank" rel="noopener noreferrer"':'')+'><img class="category-image" src="'+image+'" alt="" loading="lazy" data-image-fallback><strong>'+n+'</strong><span class="category-action" aria-hidden="true">'+(external?'View on TikTok':'Explore')+'</span></a>';
+const catOrder=catDefaults.map(d=>d[0].toLowerCase());
+const catFallback=Object.fromEntries(catDefaults.map(([n,u])=>[n.toLowerCase(),u]));
+const catLinks={footwear:'https://www.tiktok.com/@shopwithvikky12/video/7703251721035746568'};
+let cats=[];
+try{const d=await api('/categories');cats=(d.categories||[]).map(c=>({name:c.name,imageUrl:c.imageUrl||''}))}catch{}
+if(!cats.length)cats=catDefaults.map(([n,u])=>({name:n,imageUrl:u}));
+cats.sort((a,b)=>{const ia=catOrder.indexOf(a.name.toLowerCase()),ib=catOrder.indexOf(b.name.toLowerCase());return(ia<0?99:ia)-(ib<0?99:ib)||a.name.localeCompare(b.name)});
+document.getElementById('categories').innerHTML=cats.map(c=>{
+  const key=c.name.toLowerCase(),href=catLinks[key],external=Boolean(href);
+  const url=href||'/shop.html?category='+encodeURIComponent(c.name);
+  const image=c.imageUrl||catFallback[key]||'/images/product-placeholder.svg';
+  return '<a class="category-card" href="'+url+'" '+(external?'target="_blank" rel="noopener noreferrer"':'')+'><img class="category-image" src="'+image+'" alt="" loading="lazy" data-image-fallback><strong>'+c.name+'</strong><span class="category-action" aria-hidden="true">'+(external?'View on TikTok':'Explore')+'</span></a>';
 }).join('');
 const homeProductCard=p=>productCard(p);
 const ps=await loadProducts();document.getElementById('newArrivals').innerHTML=ps.filter(p=>p.newArrival).slice(0,4).map(homeProductCard).join('');document.getElementById('bestSellers').innerHTML=ps.filter(p=>p.bestSeller&&!p.newArrival).slice(0,4).map(homeProductCard).join('');document.getElementById('newsletter').addEventListener('submit',async e=>{e.preventDefault();try{await api('/newsletter',{method:'POST',body:JSON.stringify({email:e.target.email.value})});toast('Welcome to the Vikky list!');e.target.reset()}catch(err){toast(err.message)}})});

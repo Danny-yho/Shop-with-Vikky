@@ -14,7 +14,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   let requestNumber = 0;
   let searchTimer;
 
-  controls.category.value = new URLSearchParams(location.search).get('category') || '';
+  try {
+    const categoryData = await api('/categories');
+    (categoryData.categories || []).forEach(category => controls.category.add(new Option(category.name, category.name)));
+  } catch {}
+  const requestedCategory = new URLSearchParams(location.search).get('category') || '';
+  if (requestedCategory && !Array.from(controls.category.options).some(option => option.value === requestedCategory)) {
+    controls.category.add(new Option(requestedCategory, requestedCategory));
+  }
+  controls.category.value = requestedCategory;
 
   function renderPagination(pagination) {
     if (!pagination || pagination.pages < 2) {
