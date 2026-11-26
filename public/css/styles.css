@@ -374,3 +374,60 @@ html[data-theme="dark"] .wishlist-indicator .wishlist-count { color:var(--theme-
   .cart-count.pulse, .wishlist-count.pulse, .wishlist-indicator.pulse { animation:none; }
   .toast-wrap .toast { animation:none; }
 }
+
+/* Skeleton shimmer shown while product/category images load, cleared once the image paints */
+@keyframes swv-shimmer { from { background-position:-160% 0; } to { background-position:160% 0; } }
+.product-card .image-wrap,
+.product-card .image-wrap img,
+.category-image,
+.gallery-main,
+.admin-category-thumb {
+  background-color:var(--lavender-100);
+  background-image:linear-gradient(100deg,rgba(255,255,255,0) 22%,rgba(255,255,255,.5) 50%,rgba(255,255,255,0) 78%);
+  background-size:200% 100%; background-repeat:no-repeat;
+  animation:swv-shimmer 1.35s ease-in-out infinite;
+}
+.product-card .image-wrap:has(img.img-loaded),
+img.img-loaded { animation:none; background-image:none; }
+html[data-theme="dark"] .product-card .image-wrap,
+html[data-theme="dark"] .product-card .image-wrap img,
+html[data-theme="dark"] .category-image,
+html[data-theme="dark"] .gallery-main,
+html[data-theme="dark"] .admin-category-thumb {
+  background-color:var(--theme-input);
+  background-image:linear-gradient(100deg,rgba(255,255,255,0) 22%,rgba(211,184,244,.22) 50%,rgba(255,255,255,0) 78%);
+}
+
+/* Part 3: responsive typography, alignment and mobile polish */
+h1, .h1 { font-size:clamp(1.55rem,4.2vw,2.5rem); line-height:1.2; }
+h2, .h2 { font-size:clamp(1.3rem,3.4vw,2rem); line-height:1.22; }
+h3, .h3 { font-size:clamp(1.1rem,2.6vw,1.55rem); line-height:1.25; }
+p { line-height:1.55; overflow-wrap:anywhere; }
+.text-center p, .section-header p, .shop-banner-card p { max-width:66ch; margin-left:auto; margin-right:auto; }
+.section-title { font-size:clamp(1.25rem,3.2vw,2rem); line-height:1.2; }
+.hero h1 { font-size:clamp(1.9rem,6.2vw,4.4rem); line-height:1.05; }
+.script-tagline { line-height:1.25; }
+.hero-copy { line-height:1.55; }
+
+/* Product card hierarchy: even 2-line titles, single-line prices and badges */
+.product-card-body { text-align:left; }
+.product-card-body h3 { font-size:clamp(.95rem,2.4vw,1.06rem); line-height:1.3; overflow-wrap:anywhere;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.product-card-body p { line-height:1.5; overflow-wrap:anywhere;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.product-card-body .price { font-size:clamp(.95rem,2.5vw,1.08rem); }
+.price, .stock-note, .badge-featured, .cart-total, .cart-count { white-space:nowrap; }
+.stock-note { display:inline-block; }
+.category-card { align-content:end; justify-items:center; text-align:center; }
+.category-card strong, .category-action { text-align:center; }
+
+/* Long identifiers (emails, tracking codes) wrap instead of overflowing */
+.text-break, .admin-shell td, .admin-shell li, .admin-shell p { overflow-wrap:anywhere; }
+
+/* Call-to-action labels stay on one clean line */
+.btn, .nav-link, .nav-social, .option-chip, .page-button, .category-action { white-space:nowrap; }
+
+/* Consistent horizontal page rhythm: 16px mobile, scaling up cleanly */
+.container-main { padding-left:1rem; padding-right:1rem; }
+@media (min-width:768px) { .container-main { padding-left:1.75rem; padding-right:1.75rem; } }
+@media (min-width:1200px) { .container-main { padding-left:2rem; padding-right:2rem; } }

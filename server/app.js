@@ -58,7 +58,16 @@ app.get('/health', asyncHandler(async (req, res) => {
   await db.query('SELECT 1');
   res.json({ status: 'ok' });
 }));
-app.use(express.static(path.resolve(__dirname, '..', 'public'), { index: 'index.html' }));
+app.use(express.static(path.resolve(__dirname, '..', 'public'), {
+  index: 'index.html',
+  etag: true,
+  lastModified: true,
+  setHeaders(res, filePath) {
+    if (/\.html$/i.test(filePath)) return res.setHeader('Cache-Control', 'no-cache');
+    if (/\.(?:png|jpe?g|avif|webp|svg|gif|ico)$/i.test(filePath)) return res.setHeader('Cache-Control', 'public, max-age=2592000');
+    return res.setHeader('Cache-Control', 'public, max-age=3600');
+  }
+}));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api', require('./routes/catalog'));
 app.use('/api/orders', require('./routes/orders'));
